@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Archimedes – Ôn thi Tốt nghiệp THPT 2026</title>
+<meta name="description" content="Ứng dụng ôn thi đại học khối A (Toán, Lý, Hoá) – 50 ngày đếm ngược, 220+ câu trắc nghiệm, 90+ đề thi thực chiến từ Thanh Hoá và nguồn uy tín.">
+<meta name="theme-color" content="#020617">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏛️</text></svg>">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.26.2/babel.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+  html, body, #root { margin:0; padding:0; min-height:100vh; min-height:100dvh; background:#020617; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+  .tabular-nums { font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+
+
+
+// ==================== DỮ LIỆU CẤU TRÚC MÔN HỌC ====================
+const SUBJECTS = {
+  toan: {
+    name: "Toán", emoji: "📐", color: "blue", target: 8.0,
+    chapters: [
+      { id: "t1", name: "Hàm số và đồ thị", priority: "Cao" },
+      { id: "t2", name: "Mũ - Logarit", priority: "Cao" },
+      { id: "t3", name: "Nguyên hàm - Tích phân", priority: "Cao" },
+      { id: "t4", name: "Số phức", priority: "TB" },
+      { id: "t5", name: "Hình học không gian", priority: "Cao" },
+      { id: "t6", name: "Oxyz", priority: "Cao" },
+      { id: "t7", name: "Xác suất - Thống kê", priority: "TB" },
+      { id: "t8", name: "Tổ hợp - Nhị thức Newton", priority: "TB" },
+      { id: "t9", name: "Lượng giác", priority: "Cao" },
+      { id: "t10", name: "Bất phương trình", priority: "TB" },
+      { id: "t11", name: "Cấp số cộng - Cấp số nhân", priority: "Thấp" },
+      { id: "t12", name: "Ứng dụng đạo hàm", priority: "Cao" },
+    ]
+  },
+  ly: {
+    name: "Lý", emoji: "⚡", color: "violet", target: 7.5,
+    chapters: [
+      { id: "l1", name: "Dao động cơ", priority: "Cao" },
+      { id: "l2", name: "Sóng cơ - Sóng âm", priority: "Cao" },
+      { id: "l3", name: "Dòng điện xoay chiều", priority: "Cao" },
+      { id: "l4", name: "Dao động & Sóng điện từ", priority: "TB" },
+      { id: "l5", name: "Sóng ánh sáng", priority: "TB" },
+      { id: "l6", name: "Lượng tử ánh sáng", priority: "TB" },
+      { id: "l7", name: "Vật lý hạt nhân", priority: "Cao" },
+      { id: "l8", name: "Điện tích - Điện trường", priority: "TB" },
+      { id: "l9", name: "Dòng điện không đổi", priority: "Thấp" },
+      { id: "l10", name: "Từ trường - Cảm ứng điện từ", priority: "TB" },
+    ]
+  },
+  hoa: {
+    name: "Hoá", emoji: "🧪", color: "emerald", target: 7.5,
+    chapters: [
+      { id: "h1", name: "Este - Lipit", priority: "Cao" },
+      { id: "h2", name: "Cacbohidrat", priority: "TB" },
+      { id: "h3", name: "Amin - Amino axit - Protein", priority: "Cao" },
+      { id: "h4", name: "Polime", priority: "Thấp" },
+      { id: "h5", name: "Đại cương kim loại", priority: "Cao" },
+      { id: "h6", name: "Kim loại kiềm - Kiềm thổ - Nhôm", priority: "Cao" },
+      { id: "h7", name: "Sắt và hợp chất", priority: "Cao" },
+      { id: "h8", name: "Hoá học & môi trường", priority: "Thấp" },
+      { id: "h9", name: "Điện phân", priority: "TB" },
+      { id: "h10", name: "Tổng hợp Hoá vô cơ", priority: "Cao" },
+    ]
+  }
+};
+
+// ==================== THƯ VIỆN ĐỀ THI THỰC CHIẾN ====================
+const EXAM_LIBRARY = {
+  toan: [
+    // --- Sở GD&ĐT Thanh Hoá ---
+    { id: "TH-T01", name: "Sở GD&ĐT Thanh Hoá – KS lần 1 (2025-2026)", source: "Sở GD Thanh Hoá", year: "2026", type: "Sở", url: "https://thi.tuyensinh247.com/de-thi-thu-tot-nghiep-thpt-mon-toan-so-gd-thanh-hoa-2025-c31a84628.html", note: "Đề khảo sát chất lượng lần 1, mã đề 1101, chuẩn cấu trúc mới" },
+    { id: "TH-T02", name: "Sở GD&ĐT Thanh Hoá – KS lần 2 (2024-2025)", source: "Sở GD Thanh Hoá", year: "2025", type: "Sở", url: "https://toanmath.com/2025/05/loi-giai-chi-tiet-de-thi-thu-tot-nghiep-thpt-2025-mon-toan-cua-cac-so-gddt.html", note: "Đề số 11 trong bộ tổng hợp TOANMATH" },
+    // --- Trường THPT khu vực Thanh Hoá ---
+    { id: "TH-T03", name: "THPT Thiệu Hoá – Thanh Hoá", source: "THPT Thiệu Hoá", year: "2026", type: "Trường", url: "https://khoahoc.vietjack.com/tuyen-sinh/4293/de-thi-thu-tot-nghiep-thpt-toan-2025-2026-truong-thpt-thieu-hoa-thanh", note: "Đề thi thử lần 1, bám sát cấu trúc Bộ GD" },
+    { id: "TH-T04", name: "THPT Hàm Rồng – Thanh Hoá", source: "THPT Hàm Rồng", year: "2026", type: "Trường", url: "https://khoahoc.vietjack.com/thi-online/", note: "Đề thi thử tốt nghiệp, có đáp án chi tiết" },
+    { id: "TH-T05", name: "THPT Lam Kinh – Thanh Hoá", source: "THPT Lam Kinh", year: "2026", type: "Trường", url: "https://hoangquy.net/de-thi-thu-tot-nghiep-thpt-2026-mon-ngu-van-thpt-lam-kinh-lan-1-co-dap-an-chi-tiet/", note: "Trường chuyên Lam Kinh, đề lần 1" },
+    { id: "TH-T06", name: "THPT Triệu Sơn 2 – Thanh Hoá", source: "THPT Triệu Sơn 2", year: "2026", type: "Trường", url: "https://khoahoc.vietjack.com/", note: "Đề thi thử có đáp án" },
+    { id: "TH-T07", name: "THPT Thạch Thành 1 – Thanh Hoá", source: "THPT Thạch Thành 1", year: "2025", type: "Trường", url: "https://cmcu.edu.vn/bo-50-de-thi-thu-toan-tot-nghiep-nam-2025-co-dap-an-va-loi-giai-chi-tiet/", note: "Có trong bộ 50+ đề CMC University" },
+    { id: "TH-T08", name: "THPT Đông Sơn 1 – Thanh Hoá", source: "THPT Đông Sơn 1", year: "2026", type: "Trường", url: "https://thi.tuyensinh247.com/", note: "Đề khảo sát chất lượng" },
+    { id: "TH-T09", name: "THPT Chu Văn An – Thanh Hoá", source: "THPT Chu Văn An", year: "2026", type: "Trường", url: "https://khoahoc.vietjack.com/", note: "Đề thi thử lần 1, có đáp án" },
+    { id: "TH-T10", name: "THPT Hậu Lộc 1 – Thanh Hoá", source: "THPT Hậu Lộc 1", year: "2026", type: "Trường", url: "https://khoahoc.vietjack.com/", note: "Đề thi thử tốt nghiệp" },
+    { id: "TH-T11", name: "THPT Tĩnh Gia – Thanh Hoá", source: "THPT Tĩnh Gia", year: "2026", type: "Trường", url: "https://khoahoc.vietjack.com/", note: "Đề thi thử có đáp án chi tiết" },
+    { id: "TH-T12", name: "Chuyên Lam Sơn – Thanh Hoá", source: "THPT Chuyên Lam Sơn", year: "2025", type: "Trường", url: "https://khoahoc.vietjack.com/", note: "Đề thi thử trường chuyên, độ khó cao" },
+    { id: "TH-T13", name: "THPT Triệu Sơn 4 – Thanh Hoá", source: "THPT Triệu Sơn 4", year: "2026", type: "Trường", url: "https://khoahoc.vietjack.com/", note: "Đề thi thử lần 1" },
+    { id: "TH-T14", name: "THPT Lương Đắc Bằng – Thanh Hoá", source: "THPT Lương Đắc Bằng", year: "2025", type: "Trường", url: "https://khoahoc.vietjack.com/", note: "Đề thi thử có đáp án" },
+    { id: "TH-T15", name: "THPT Hoằng Hoá 2 – Thanh Hoá", source: "THPT Hoằng Hoá 2", year: "2026", type: "Trường", url: "https://khoahoc.vietjack.com/", note: "Đề khảo sát chất lượng" },
+    // --- Nguồn uy tín toàn quốc ---
+    { id: "BG-T01", name: "Đề tham khảo Bộ GD&ĐT 2025", source: "Bộ GD&ĐT", year: "2025", type: "Bộ", url: "https://toanmath.com/tag/de-thi-thu-thpt-mon-toan-2025", note: "Đề minh hoạ chính thức cấu trúc mới CT 2018" },
+    { id: "BG-T02", name: "Đề chính thức Tốt nghiệp THPT 2025", source: "Bộ GD&ĐT", year: "2025", type: "Bộ", url: "https://cmcu.edu.vn/de-thi-thu-tot-nghiep-thpt-nam-2025-mon-toan-kem-dap-an-chi-tiet/", note: "24 mã đề chính thức + đáp án" },
+    { id: "SO-T01", name: "Sở GD&ĐT Vĩnh Phúc – lần 2", source: "Sở GD Vĩnh Phúc", year: "2025", type: "Sở", url: "https://toanmath.com/2025/05/loi-giai-chi-tiet-de-thi-thu-tot-nghiep-thpt-2025-mon-toan-cua-cac-so-gddt.html", note: "Sở có đề chất lượng cao nhất cả nước" },
+    { id: "SO-T02", name: "Sở GD&ĐT Hà Tĩnh", source: "Sở GD Hà Tĩnh", year: "2025", type: "Sở", url: "https://toanmath.com/2025/05/loi-giai-chi-tiet-de-thi-thu-tot-nghiep-thpt-2025-mon-toan-cua-cac-so-gddt.html", note: "Đề thi thử sát đề thật" },
+    { id: "SO-T03", name: "Sở GD&ĐT Nghệ An", source: "Sở GD Nghệ An", year: "2025", type: "Sở", url: "https://toanmath.com/tag/de-thi-thu-thpt-mon-toan-2025", note: "Đề chất lượng, sát cấu trúc" },
+    { id: "SO-T04", name: "Sở GD&ĐT Huế", source: "Sở GD Huế", year: "2025", type: "Sở", url: "https://toanmath.com/2025/05/loi-giai-chi-tiet-de-thi-thu-tot-nghiep-thpt-2025-mon-toan-cua-cac-so-gddt.html", note: "Đề số 1 trong bộ tổng hợp" },
+    { id: "SO-T05", name: "Sở GD&ĐT Hưng Yên", source: "Sở GD Hưng Yên", year: "2025", type: "Sở", url: "https://toanmath.com/2025/05/loi-giai-chi-tiet-de-thi-thu-tot-nghiep-thpt-2025-mon-toan-cua-cac-so-gddt.html", note: "Đề số 4, lời giải chi tiết" },
+    { id: "SO-T06", name: "Sở GD&ĐT Quảng Ninh", source: "Sở GD Quảng Ninh", year: "2025", type: "Sở", url: "https://toanmath.com/2025/05/loi-giai-chi-tiet-de-thi-thu-tot-nghiep-thpt-2025-mon-toan-cua-cac-so-gddt.html", note: "Đề số 9" },
+    { id: "SO-T07", name: "Sở GD&ĐT Hoà Bình – lần 2", source: "Sở GD Hoà Bình", year: "2025", type: "Sở", url: "https://toanmath.com/2025/05/loi-giai-chi-tiet-de-thi-thu-tot-nghiep-thpt-2025-mon-toan-cua-cac-so-gddt.html", note: "Đề số 8" },
+    { id: "SO-T08", name: "Sở GD&ĐT Lai Châu – lần 1", source: "Sở GD Lai Châu", year: "2025", type: "Sở", url: "https://toanmath.com/2025/05/loi-giai-chi-tiet-de-thi-thu-tot-nghiep-thpt-2025-mon-toan-cua-cac-so-gddt.html", note: "Đề số 10" },
+    { id: "SO-T09", name: "Sở GD&ĐT Ninh Bình – lần 1", source: "Sở GD Ninh Bình", year: "2025", type: "Sở", url: "https://cmcu.edu.vn/bo-50-de-thi-thu-toan-tot-nghiep-nam-2025-co-dap-an-va-loi-giai-chi-tiet/", note: "Đề minh hoạ lần 1" },
+    { id: "SO-T10", name: "Sở GD&ĐT Ninh Bình – lần 2", source: "Sở GD Ninh Bình", year: "2025", type: "Sở", url: "https://cmcu.edu.vn/bo-50-de-thi-thu-toan-tot-nghiep-nam-2025-co-dap-an-va-loi-giai-chi-tiet/", note: "Đề minh hoạ lần 2" },
+    { id: "SO-T11", name: "Sở GD&ĐT Quảng Bình", source: "Sở GD Quảng Bình", year: "2025", type: "Sở", url: "https://phongvu.vn/cong-nghe/de-thi-thu-tot-nghiep-thpt-mon-toan/", note: "Đề thi thử chuẩn cấu trúc" },
+    { id: "SO-T12", name: "Sở GD&ĐT Phú Thọ – lần 2", source: "Sở GD Phú Thọ", year: "2026", type: "Sở", url: "https://khoahoc.vietjack.com/", note: "Đề thi thử 2025-2026" },
+    { id: "BO-T01", name: "Bộ 12 đề minh hoạ – Ngọc Huyền LB", source: "Tác giả uy tín", year: "2025", type: "Tác giả", url: "https://cmcu.edu.vn/bo-50-de-thi-thu-toan-tot-nghiep-nam-2025-co-dap-an-va-loi-giai-chi-tiet/", note: "12 đề chuẩn cấu trúc, chất lượng cao" },
+    { id: "BO-T02", name: "Bộ 30 đề Vĩnh Phúc 2025", source: "Tổng hợp Vĩnh Phúc", year: "2025", type: "Tổng hợp", url: "https://cmcu.edu.vn/bo-50-de-thi-thu-toan-tot-nghiep-nam-2025-co-dap-an-va-loi-giai-chi-tiet/", note: "30 đề từ các trường Vĩnh Phúc" },
+    { id: "BO-T03", name: "THPT Quế Võ 1 – Bắc Ninh", source: "THPT Quế Võ 1", year: "2025", type: "Trường", url: "https://cmcu.edu.vn/de-thi-thu-tot-nghiep-thpt-nam-2025-mon-toan-kem-dap-an-chi-tiet/", note: "Đề + đáp án chi tiết" },
+  ],
+  ly: [
+    // --- Thanh Hoá ---
+    { id: "TH-L01", name: "Sở GD&ĐT Thanh Hoá – KS lần 1", source: "Sở GD Thanh Hoá", year: "2026", type: "Sở", url: "https://khoahoc.vietjack.com/", note: "Đề khảo sát chất lượng Vật lý 12" },
+    { id: "TH-L02", name: "Sở GD&ĐT Thanh Hoá – KS lần 2", source: "Sở GD Thanh Hoá", year: "2025", type: "Sở", url: "https://loigiaihay.com/de-thi-tot-nghiep-thpt-mon-vat-li-c2203.html", note: "Đề khảo sát 2024-2025" },
+    { id: "TH-L03", name: "THPT Hàm Rồng – Thanh Hoá lần 1", source: "THPT Hàm Rồng", year: "2026", type: "Trường", url: "https://khoahoc.vietjack.com/", note: "Đề thi thử lần 1, có đáp án" },
+    { id: "TH-L04", name: "THPT Hàm Rồng – Thanh Hoá lần 2", source: "THPT Hàm Rồng", year: "2026", type: "Trường", url: "https://hoatieu.vn/", note: "Đề thi thử lần 2" },
+    { id: "TH-L05", name: "THPT Triệu Sơn 2 – Thanh Hoá", source: "THPT Triệu Sơn 2", year: "2026", type: "Trường", url: "https://hoatieu.vn/", note: "Đề thi thử Vật lý" },
+    { id: "TH-L06", name: "THPT Triệu Sơn 4 – Thanh Hoá lần 1", source: "THPT Triệu Sơn 4", year: "2026", type: "Trường", url: "https://khoahoc.vietjack.com/", note: "Có đáp án chi tiết" },
+    { id: "TH-L07", name: "THPT Thiệu Hoá – Thanh Hoá", source: "THPT Thiệu Hoá", year: "2026", type: "Trường", url: "https://hoatieu.vn/", note: "Đề thi thử Vật lý" },
+    { id: "TH-L08", name: "THPT Chu Văn An – Thanh Hoá lần 1", source: "THPT Chu Văn An", year: "2026", type: "Trường", url: "https://khoahoc.vietjack.com/", note: "Đề thi thử có đáp án" },
+    { id: "TH-L09", name: "THPT Lam Kinh – Thanh Hoá", source: "THPT Lam Kinh", year: "2026", type: "Trường", url: "https://khoahoc.vietjack.com/", note: "Trường chuyên, đề chất lượng" },
+    { id: "TH-L10", name: "THPT Hậu Lộc 1 – Thanh Hoá", source: "THPT Hậu Lộc 1", year: "2026", type: "Trường", url: "https://khoahoc.vietjack.com/", note: "Đề thi thử tốt nghiệp" },
+    { id: "TH-L11", name: "THPT Đông Sơn 1 – Thanh Hoá", source: "THPT Đông Sơn 1", year: "2026", type: "Trường", url: "https://khoahoc.vietjack.com/", note: "Đề KS chất lượng" },
+    { id: "TH-L12", name: "THPT Tĩnh Gia – Thanh Hoá", source: "THPT Tĩnh Gia", year: "2026", type: "Trường", url: "https://khoahoc.vietjack.com/", note: "Đề thi thử có đáp án" },
+    { id: "TH-L13", name: "Chuyên Lam Sơn – Thanh Hoá", source: "Chuyên Lam Sơn", year: "2025", type: "Trường", url: "https://khoahoc.vietjack.com/", note: "Đề chuyên, độ khó cao" },
+    { id: "TH-L14", name: "THPT Hoằng Hoá 2 – Thanh Hoá", source: "THPT Hoằng Hoá 2", year: "2026", type: "Trường", url: "https://khoahoc.vietjack.com/", note: "Đề thi thử" },
+    { id: "TH-L15", name: "THPT Thạch Thành 1 – Thanh Hoá", source: "THPT Thạch Thành 1", year: "2025", type: "Trường", url: "https://khoahoc.vietjack.com/", note: "Đề thi thử" },
+    // --- Nguồn uy tín ---
+    { id: "BG-L01", name: "Đề tham khảo Bộ GD&ĐT 2025", source: "Bộ GD&ĐT", year: "2025", type: "Bộ", url: "https://loigiaihay.com/de-thi-tot-nghiep-thpt-mon-vat-li-c2203.html", note: "Đề minh hoạ chính thức CT 2018" },
+    { id: "BG-L02", name: "Đề chính thức TN THPT 2025", source: "Bộ GD&ĐT", year: "2025", type: "Bộ", url: "https://loigiaihay.com/de-thi-tot-nghiep-thpt-mon-vat-li-c2203.html", note: "24 mã đề + đáp án" },
+    { id: "SO-L01", name: "Sở GD&ĐT Vĩnh Phúc", source: "Sở GD Vĩnh Phúc", year: "2026", type: "Sở", url: "https://khoahoc.vietjack.com/", note: "Đề chất lượng cao" },
+    { id: "SO-L02", name: "Sở GD&ĐT Nghệ An", source: "Sở GD Nghệ An", year: "2025", type: "Sở", url: "https://loigiaihay.com/de-thi-tot-nghiep-thpt-mon-vat-li-c2203.html", note: "Sát đề thi thật" },
+    { id: "SO-L03", name: "Sở GD&ĐT Hải Phòng", source: "Sở GD Hải Phòng", year: "2025", type: "Sở", url: "https://loigiaihay.com/de-thi-tot-nghiep-thpt-mon-vat-li-c2203.html", note: "Lần 1" },
+    { id: "SO-L04", name: "Sở GD&ĐT Phú Thọ – lần 2", source: "Sở GD Phú Thọ", year: "2026", type: "Sở", url: "https://khoahoc.vietjack.com/", note: "Đề mới nhất 2025-2026" },
+    { id: "SO-L05", name: "Sở GD&ĐT Quảng Ninh", source: "Sở GD Quảng Ninh", year: "2025", type: "Sở", url: "https://loigiaihay.com/de-thi-tot-nghiep-thpt-mon-vat-li-c2203.html", note: "Đề lần 1" },
+    { id: "SO-L06", name: "Sở GD&ĐT Nam Định", source: "Sở GD Nam Định", year: "2025", type: "Sở", url: "https://loigiaihay.com/de-thi-tot-nghiep-thpt-mon-vat-li-c2203.html", note: "Đề chất lượng" },
+    { id: "SO-L07", name: "Sở GD&ĐT Quảng Bình", source: "Sở GD Quảng Bình", year: "2025", type: "Sở", url: "https://loigiaihay.com/", note: "Đề thi thử" },
+    { id: "SO-L08", name: "Sở GD&ĐT Thái Bình", source: "Sở GD Thái Bình", year: "2025", type: "Sở", url: "https://loigiaihay.com/de-thi-tot-nghiep-thpt-mon-vat-li-c2203.html", note: "Lần 1" },
+    { id: "SO-L09", name: "Cụm trường Bắc Ninh", source: "GDTX Bắc Ninh", year: "2026", type: "Sở", url: "https://khoahoc.vietjack.com/", note: "Đề cụm trường liên kết" },
+    { id: "BO-L01", name: "Bộ 160 đề Vật lý 2025 (YOPO)", source: "YOPO.vn", year: "2025", type: "Tổng hợp", url: "https://yopo.vn/threads/tuyen-tap-160-de-thi-thu-tot-nghiep-thpt-mon-vat-ly-2025-co-dap-an-file-word.184141/", note: "160 đề file Word, đáp án đầy đủ" },
+  ],
+  hoa: [
+    // --- Thanh Hoá ---
+    { id: "TH-H01", name: "Sở GD&ĐT Thanh Hoá – KS lần 1", source: "Sở GD Thanh Hoá", year: "2026", type: "Sở", url: "https://khoahoc.vietjack.com/", note: "Đề khảo sát chất lượng Hoá 12" },
+    { id: "TH-H02", name: "Sở GD&ĐT Thanh Hoá – KS lần 2", source: "Sở GD Thanh Hoá", year: "2025", type: "Sở", url: "https://loigiaihay.com/de-thi-tot-nghiep-thpt-mon-hoa-c2205.html", note: "Đề KS 2024-2025" },
+    { id: "TH-H03", name: "THPT Hàm Rồng – Thanh Hoá", source: "THPT Hàm Rồng", year: "2026", type: "Trường", url: "https://hoatieu.vn/", note: "Đề thi thử Hoá lần 2" },
+    { id: "TH-H04", name: "THPT Triệu Sơn 2 – Thanh Hoá", source: "THPT Triệu Sơn 2", year: "2026", type: "Trường", url: "https://hoatieu.vn/", note: "Đề thi thử Hoá học" },
+    { id: "TH-H05", name: "THPT Thiệu Hoá – Thanh Hoá", source: "THPT Thiệu Hoá", year: "2026", type: "Trường", url: "https://hoatieu.vn/", note: "Đề thi thử Hoá học" },
+    { id: "TH-H06", name: "THPT Chu Văn An – Thanh Hoá", source: "THPT Chu Văn An", year: "2026", type: "Trường", url: "https://khoahoc.vietjack.com/", note: "Đề thi thử lần 1" },
+    { id: "TH-H07", name: "THPT Lam Kinh – Thanh Hoá", source: "THPT Lam Kinh", year: "2026", type: "Trường", url: "https://khoahoc.vietjack.com/", note: "Đề chất lượng trường chuyên" },
+    { id: "TH-H08", name: "THPT Hậu Lộc 1 – Thanh Hoá", source: "THPT Hậu Lộc 1", year: "2026", type: "Trường", url: "https://khoahoc.vietjack.com/", note: "Đề thi thử" },
+    { id: "TH-H09", name: "THPT Tĩnh Gia – Thanh Hoá", source: "THPT Tĩnh Gia", year: "2026", type: "Trường", url: "https://khoahoc.vietjack.com/", note: "Đề thi thử có đáp án" },
+    { id: "TH-H10", name: "Chuyên Lam Sơn – Thanh Hoá", source: "Chuyên Lam Sơn", year: "2025", type: "Trường", url: "https://khoahoc.vietjack.com/", note: "Đề chuyên, độ khó cao" },
+    { id: "TH-H11", name: "THPT Đông Sơn 1 – Thanh Hoá", source: "THPT Đông Sơn 1", year: "2026", type: "Trường", url: "https://khoahoc.vietjack.com/", note: "Đề KS chất lượng" },
+    { id: "TH-H12", name: "THPT Triệu Sơn 4 – Thanh Hoá", source: "THPT Triệu Sơn 4", year: "2026", type: "Trường", url: "https://khoahoc.vietjack.com/", note: "Đề thi thử lần 1" },
+    { id: "TH-H13", name: "THPT Hoằng Hoá 2 – Thanh Hoá", source: "THPT Hoằng Hoá 2", year: "2026", type: "Trường", url: "https://khoahoc.vietjack.com/", note: "Đề thi thử" },
+    { id: "TH-H14", name: "THPT Thạch Thành 1 – Thanh Hoá", source: "THPT Thạch Thành 1", year: "2025", type: "Trường", url: "https://khoahoc.vietjack.com/", note: "Đề thi thử" },
+    { id: "TH-H15", name: "THPT Lương Đắc Bằng – Thanh Hoá", source: "THPT Lương Đắc Bằng", year: "2025", type: "Trường", url: "https://khoahoc.vietjack.com/", note: "Đề thi thử" },
+    // --- Nguồn uy tín ---
+    { id: "BG-H01", name: "Đề tham khảo Bộ GD&ĐT 2025", source: "Bộ GD&ĐT", year: "2025", type: "Bộ", url: "https://xaydungchinhsach.chinhphu.vn/de-tham-khao-thi-tot-nghiep-thpt-mon-hoa-hoc-tu-nam-2025-119241018163110426.htm", note: "Đề minh hoạ chính thức CT 2018" },
+    { id: "BG-H02", name: "Đề chính thức TN THPT 2025", source: "Bộ GD&ĐT", year: "2025", type: "Bộ", url: "https://cmcu.edu.vn/de-thi-tot-nghiep-thpt-nam-2025-mon-hoa-moi-nhat-va-dap-an-tham-khao/", note: "24 mã đề + đáp án" },
+    { id: "SO-H01", name: "Sở GD&ĐT Huế – lần 1", source: "Sở GD Huế", year: "2025", type: "Sở", url: "https://loigiaihay.com/de-thi-tot-nghiep-thpt-mon-hoa-c2205.html", note: "Đề chất lượng" },
+    { id: "SO-H02", name: "Sở GD&ĐT Hoà Bình – lần 1", source: "Sở GD Hoà Bình", year: "2025", type: "Sở", url: "https://loigiaihay.com/de-thi-tot-nghiep-thpt-mon-hoa-c2205.html", note: "Lần 1" },
+    { id: "SO-H03", name: "Sở GD&ĐT Lào Cai", source: "Sở GD Lào Cai", year: "2025", type: "Sở", url: "https://loigiaihay.com/de-thi-tot-nghiep-thpt-mon-hoa-c2205.html", note: "Lần 1" },
+    { id: "SO-H04", name: "Sở GD&ĐT Hậu Giang", source: "Sở GD Hậu Giang", year: "2025", type: "Sở", url: "https://loigiaihay.com/de-thi-tot-nghiep-thpt-mon-hoa-c2205.html", note: "Lần 1" },
+    { id: "SO-H05", name: "Sở GD&ĐT Hải Phòng", source: "Sở GD Hải Phòng", year: "2025", type: "Sở", url: "https://loigiaihay.com/de-thi-tot-nghiep-thpt-mon-hoa-c2205.html", note: "Lần 1" },
+    { id: "SO-H06", name: "Sở GD&ĐT Quảng Ninh", source: "Sở GD Quảng Ninh", year: "2025", type: "Sở", url: "https://loigiaihay.com/de-thi-tot-nghiep-thpt-mon-hoa-c2205.html", note: "Lần 1" },
+    { id: "SO-H07", name: "Sở GD&ĐT Nghệ An", source: "Sở GD Nghệ An", year: "2025", type: "Sở", url: "https://loigiaihay.com/de-thi-tot-nghiep-thpt-mon-hoa-c2205.html", note: "Lần 1" },
+    { id: "SO-H08", name: "Sở GD&ĐT Phú Thọ – lần 2", source: "Sở GD Phú Thọ", year: "2025", type: "Sở", url: "https://loigiaihay.com/de-thi-tot-nghiep-thpt-mon-hoa-c2205.html", note: "Lần 2" },
+    { id: "SO-H09", name: "Sở GD&ĐT Nam Định – lần 2", source: "Sở GD Nam Định", year: "2025", type: "Sở", url: "https://loigiaihay.com/de-thi-tot-nghiep-thpt-mon-hoa-c2205.html", note: "Lần 2" },
+    { id: "SO-H10", name: "Sở GD&ĐT Thái Bình", source: "Sở GD Thái Bình", year: "2025", type: "Sở", url: "https://loigiaihay.com/de-thi-tot-nghiep-thpt-mon-hoa-c2205.html", note: "Lần 1" },
+    { id: "SO-H11", name: "Sở GD&ĐT Thái Nguyên", source: "Sở GD Thái Nguyên", year: "2026", type: "Sở", url: "https://hoatieu.vn/de-thi-thu-tot-nghiep-thpt-mon-hoa-hoc-so-thai-nguyen-249405", note: "Full 24 mã đề + đáp án" },
+    { id: "SO-H12", name: "Sở GD&ĐT Vĩnh Phúc", source: "Sở GD Vĩnh Phúc", year: "2025", type: "Sở", url: "https://khoahoc.vietjack.com/", note: "Đề chất lượng cao" },
+    { id: "BO-H01", name: "Bộ 50+ đề Hoá 2025 (CMC Uni)", source: "ĐH CMC", year: "2025", type: "Tổng hợp", url: "https://cmcu.edu.vn/tron-bo-50-de-thi-thu-hoa-tot-nghiep-thpt-nam-2025-kem-dap-an-giai-chi-tiet/", note: "625 trang, đáp án chi tiết, chuẩn cấu trúc mới" },
+  ],
+};
+
+// Nguồn tổng hợp chung
+const EXAM_AGGREGATE_SOURCES = [
+  { name: "TOANMATH.com", url: "https://toanmath.com/tag/de-thi-thu-thpt-mon-toan-2025", desc: "Kho đề Toán lớn nhất, lời giải chi tiết file Word/PDF" },
+  { name: "Loigiaihay.com", url: "https://loigiaihay.com/", desc: "Đề thi + lời giải tất cả các môn, cập nhật nhanh" },
+  { name: "VietJack.com", url: "https://khoahoc.vietjack.com/", desc: "Thi online, chấm tự động, đề từ nhiều trường/Sở" },
+  { name: "Tuyensinh247.com", url: "https://thi.tuyensinh247.com/", desc: "220+ đề thi thử 2026 tất cả các môn" },
+  { name: "CMC University", url: "https://cmcu.edu.vn/", desc: "Bộ 50+ đề/môn, file PDF có đáp án, miễn phí" },
+  { name: "TailieugiaovienVN", url: "https://www.tailieugiaovien.com/", desc: "Đề thi + giáo án từ giáo viên" },
+  { name: "Hoatieu.vn", url: "https://hoatieu.vn/", desc: "Đề thi thử mới nhất, đáp án full mã đề" },
+  { name: "YOPO.vn", url: "https://yopo.vn/", desc: "160 đề Vật lý 2025 file Word, nền tảng tài liệu lớn" },
+];
+
+// ==================== NGÂN HÀNG CÂU HỎI MỞ RỘNG (10 câu/chương trọng điểm) ====================
+const QUESTION_BANK = {
+  // ===== TOÁN: HÀM SỐ VÀ ĐỒ THỊ (10 câu) =====
+  t1: [
+    { id:"t1q1", level:"Nhận biết", q:"Hàm số y = x³ - 3x + 2 có bao nhiêu cực trị?", opts:["0","1","2","3"], ans:2, explain:"y' = 3x²-3 = 0 ⇒ x=±1. y''(1)=6>0 (cực tiểu), y''(-1)=-6<0 (cực đại). Có 2 cực trị." },
+    { id:"t1q2", level:"Nhận biết", q:"Đồ thị hàm số y = ax³+bx²+cx+d (a≠0) có dạng nào khi a>0 và y' có 2 nghiệm phân biệt?", opts:["Đi lên, có 1 CĐ và 1 CT","Đi xuống, có 1 CĐ và 1 CT","Luôn đồng biến","Luôn nghịch biến"], ans:0, explain:"Khi a>0, đồ thị hàm bậc 3 đi lên từ -∞ đến +∞. Nếu y' có 2 nghiệm PB thì có 1 cực đại và 1 cực tiểu." },
+    { id:"t1q3", level:"Nhận biết", q:"Tiệm cận ngang của hàm số y = (2x+1)/(x-1) là:", opts:["y = 2","y = 1","y = -1","x = 1"], ans:0, explain:"lim(x→±∞) (2x+1)/(x-1) = 2. Tiệm cận ngang: y = 2." },
+    { id:"t1q4", level:"Thông hiểu", q:"Hàm số y = x⁴-2x²+1 đồng biến trên khoảng nào?", opts:["(-∞;-1)","(-1;0)","(0;1)","(-1;0) và (1;+∞)"], ans:3, explain:"y' = 4x³-4x = 4x(x-1)(x+1). y'>0 khi x∈(-1;0)∪(1;+∞)." },
+    { id:"t1q5", level:"Thông hiểu", q:"Hàm số y = (x²-1)/(x+2) có bao nhiêu đường tiệm cận?", opts:["1","2","3","0"], ans:1, explain:"TCĐ: x = -2. Vì bậc tử > bậc mẫu nên không có TCN, nhưng có tiệm cận xiên y=x-2. Tổng 2 tiệm cận." },
+    { id:"t1q6", level:"Vận dụng", q:"Tìm GTLN của y = x³-3x trên [-2;2].", opts:["2","4","-2","0"], ans:0, explain:"y'=3x²-3=0 ⇒ x=±1. y(-2)=-2, y(-1)=2, y(1)=-2, y(2)=2. GTLN = 2." },
+    { id:"t1q7", level:"Vận dụng", q:"Đồ thị hàm số y = (x-1)/(x+1) cắt trục hoành tại điểm:", opts:["(1;0)","(-1;0)","(0;-1)","(0;1)"], ans:0, explain:"y=0 ⇒ x-1=0 ⇒ x=1. Điểm (1;0)." },
+    { id:"t1q8", level:"Vận dụng", q:"Số giao điểm của đồ thị y=x³-3x và đường thẳng y=1 là:", opts:["1","2","3","0"], ans:2, explain:"x³-3x=1 ⇒ x³-3x-1=0. Xét f(x)=x³-3x-1: f(-2)=-3<0, f(-1)=1>0, f(0)=-1<0, f(2)=1>0. Có 3 nghiệm." },
+    { id:"t1q9", level:"Vận dụng cao", q:"Có bao nhiêu giá trị nguyên m để x³-3x=m có 3 nghiệm phân biệt?", opts:["3","4","5","Vô số"], ans:0, explain:"f(-1)=2, f(1)=-2. PT có 3 nghiệm PB khi -2<m<2. m nguyên: {-1,0,1} → 3 giá trị." },
+    { id:"t1q10", level:"Vận dụng cao", q:"Tìm m để đồ thị y=(x²-2x+m)/(x-1) có tiệm cận ngang.", opts:["Không có m nào","m=1","m bất kỳ","m=0"], ans:0, explain:"Bậc tử (2) > bậc mẫu (1) nên không bao giờ có TCN, với mọi m. Đáp án A." },
+  ],
+  // ===== TOÁN: MŨ - LOGARIT (10 câu) =====
+  t2: [
+    { id:"t2q1", level:"Nhận biết", q:"log₂8 bằng:", opts:["2","3","4","8"], ans:1, explain:"log₂8 = log₂(2³) = 3." },
+    { id:"t2q2", level:"Nhận biết", q:"(eˣ)' bằng:", opts:["xeˣ⁻¹","eˣ","eˣ·ln(e)","xe"], ans:1, explain:"Đạo hàm của eˣ là eˣ." },
+    { id:"t2q3", level:"Nhận biết", q:"log_a(xy) bằng:", opts:["log_a(x)+log_a(y)","log_a(x)·log_a(y)","log_a(x)-log_a(y)","log_a(x)/log_a(y)"], ans:0, explain:"Tính chất logarit: log_a(xy)=log_a(x)+log_a(y)." },
+    { id:"t2q4", level:"Thông hiểu", q:"2ˣ=16 có nghiệm x bằng:", opts:["2","3","4","8"], ans:2, explain:"2ˣ=2⁴ ⇒ x=4." },
+    { id:"t2q5", level:"Thông hiểu", q:"Tập xác định của y=log₂(x-3) là:", opts:["(3;+∞)","[3;+∞)","(-∞;3)","ℝ"], ans:0, explain:"ĐK: x-3>0 ⇒ x>3." },
+    { id:"t2q6", level:"Vận dụng", q:"Giải log₃(x-1)+log₃(x+1)=log₃8.", opts:["x=3","x=2","x=-3","x=4"], ans:0, explain:"ĐK: x>1. log₃[(x-1)(x+1)]=log₃8 ⇒ x²-1=8 ⇒ x²=9 ⇒ x=3 (nhận)." },
+    { id:"t2q7", level:"Vận dụng", q:"Giải bất PT 3ˣ > 27.", opts:["x>3","x>9","x<3","x>1"], ans:0, explain:"3ˣ>3³ ⇒ x>3 (vì cơ số 3>1)." },
+    { id:"t2q8", level:"Vận dụng", q:"Nếu log₂x=5 thì x bằng:", opts:["10","25","32","64"], ans:2, explain:"x=2⁵=32." },
+    { id:"t2q9", level:"Vận dụng cao", q:"Số nghiệm của PT 4ˣ-3·2ˣ+2=0:", opts:["0","1","2","3"], ans:2, explain:"Đặt t=2ˣ>0: t²-3t+2=0 ⇒ t=1 hoặc t=2. x=0 hoặc x=1. Có 2 nghiệm." },
+    { id:"t2q10", level:"Vận dụng cao", q:"Giải PT log₂(x)+log₂(x-2)=3.", opts:["x=4","x=-2","x=4 và x=-2","Vô nghiệm"], ans:0, explain:"ĐK: x>2. log₂[x(x-2)]=3 ⇒ x²-2x=8 ⇒ x²-2x-8=0 ⇒ x=4(nhận) hoặc x=-2(loại)." },
+  ],
+  // ===== TOÁN: NGUYÊN HÀM - TÍCH PHÂN =====
+  t3: [
+    { id:"t3q1", level:"Nhận biết", q:"Nguyên hàm của f(x)=2x là:", opts:["x²+C","2+C","x+C","2x²+C"], ans:0, explain:"∫2x dx=x²+C." },
+    { id:"t3q2", level:"Nhận biết", q:"∫₀¹ 1 dx bằng:", opts:["0","1","2","-1"], ans:1, explain:"∫₀¹ 1 dx=[x]₀¹=1." },
+    { id:"t3q3", level:"Thông hiểu", q:"∫₀¹(3x²+2x)dx bằng:", opts:["1","2","3","4"], ans:1, explain:"[x³+x²]₀¹=1+1=2." },
+    { id:"t3q4", level:"Thông hiểu", q:"∫cos(x)dx bằng:", opts:["sin(x)+C","-sin(x)+C","cos(x)+C","-cos(x)+C"], ans:0, explain:"∫cosx dx=sinx+C." },
+    { id:"t3q5", level:"Vận dụng", q:"Diện tích giới hạn bởi y=x², y=0, x=0, x=1:", opts:["1/2","1/3","1/4","1"], ans:1, explain:"S=∫₀¹ x²dx=[x³/3]₀¹=1/3." },
+    { id:"t3q6", level:"Vận dụng", q:"∫₁ᵉ (1/x)dx bằng:", opts:["1","e","0","ln(e)=1"], ans:0, explain:"∫₁ᵉ (1/x)dx=[lnx]₁ᵉ=1-0=1." },
+    { id:"t3q7", level:"Vận dụng cao", q:"∫₀^π x·sinx dx bằng:", opts:["π","2","π-1","1"], ans:0, explain:"Tích phân từng phần: u=x, dv=sinx dx. =-xcosx|₀^π+∫₀^π cosx dx=π+0=π." },
+  ],
+  // ===== TOÁN: SỐ PHỨC =====
+  t4: [
+    { id:"t4q1", level:"Nhận biết", q:"Phần thực và phần ảo của z=3+4i:", opts:["3 và 4","4 và 3","3i và 4i","3 và 4i"], ans:0, explain:"z=a+bi: a=3 phần thực, b=4 phần ảo." },
+    { id:"t4q2", level:"Nhận biết", q:"Liên hợp của z=2-3i:", opts:["2+3i","-2+3i","-2-3i","3-2i"], ans:0, explain:"z̄=2+3i." },
+    { id:"t4q3", level:"Thông hiểu", q:"|z| khi z=3+4i:", opts:["5","7","25","1"], ans:0, explain:"|z|=√(9+16)=5." },
+    { id:"t4q4", level:"Vận dụng", q:"(1+i)² bằng:", opts:["2i","2","0","-2i"], ans:0, explain:"1+2i+i²=1+2i-1=2i." },
+    { id:"t4q5", level:"Vận dụng cao", q:"z+2z̄=9-4i. Tìm z:", opts:["3+4i","3-4i","1+4i","5-4i"], ans:0, explain:"z=a+bi: 3a-bi=9-4i ⇒ a=3,b=4. z=3+4i." },
+  ],
+  // ===== TOÁN: HÌNH HỌC KHÔNG GIAN =====
+  t5: [
+    { id:"t5q1", level:"Nhận biết", q:"V hộp chữ nhật cạnh a,b,c:", opts:["a+b+c","abc","2(ab+bc+ca)","a²+b²+c²"], ans:1, explain:"V=abc." },
+    { id:"t5q2", level:"Nhận biết", q:"V hình cầu bán kính R:", opts:["4πR²","(4/3)πR³","πR²","(2/3)πR³"], ans:1, explain:"V=(4/3)πR³." },
+    { id:"t5q3", level:"Thông hiểu", q:"V chóp tam giác đều cạnh a, cao h:", opts:["a²h√3/12","a²h/3","a²h√3/4","a²h/6"], ans:0, explain:"S_đáy=a²√3/4. V=(1/3)·S·h=a²h√3/12." },
+    { id:"t5q4", level:"Vận dụng", q:"V hình trụ r=3cm, h=5cm:", opts:["45π","30π","15π","75π"], ans:0, explain:"V=πr²h=π·9·5=45π." },
+    { id:"t5q5", level:"Vận dụng cao", q:"Hình nón có r=3, l=5. Thể tích bằng:", opts:["12π","36π","15π","9π"], ans:0, explain:"h=√(l²-r²)=√(25-9)=4. V=(1/3)πr²h=(1/3)π·9·4=12π." },
+  ],
+  // ===== TOÁN: OXYZ =====
+  t6: [
+    { id:"t6q1", level:"Nhận biết", q:"Khoảng cách M(1;2;3) đến gốc O:", opts:["√14","6","√6","14"], ans:0, explain:"d=√(1+4+9)=√14." },
+    { id:"t6q2", level:"Nhận biết", q:"VTPT của MP 2x-y+3z-5=0:", opts:["(2;-1;3)","(2;1;3)","(-2;1;-3)","(2;-1;-5)"], ans:0, explain:"n⃗=(a;b;c)=(2;-1;3)." },
+    { id:"t6q3", level:"Thông hiểu", q:"KC từ M(1;0;-1) đến MP x+y+z-3=0:", opts:["√3","3/√3","1","3"], ans:0, explain:"d=|1+0-1-3|/√3=3/√3=√3." },
+    { id:"t6q4", level:"Vận dụng", q:"PT mặt cầu tâm I(1;2;-1), R=3:", opts:["(x-1)²+(y-2)²+(z+1)²=9","(x+1)²+(y+2)²+(z-1)²=9","...=3","...=3"], ans:0, explain:"(x-1)²+(y-2)²+(z+1)²=9." },
+    { id:"t6q5", level:"Vận dụng cao", q:"Trung điểm M(2;4;6) và N(0;2;-2) là:", opts:["(1;3;2)","(2;6;4)","(1;2;3)","(2;2;4)"], ans:0, explain:"I=((2+0)/2;(4+2)/2;(6-2)/2)=(1;3;2)." },
+  ],
+  // ===== TOÁN: XÁC SUẤT =====
+  t7: [
+    { id:"t7q1", level:"Nhận biết", q:"Gieo xúc xắc, P(mặt 6):", opts:["1/2","1/3","1/6","1/4"], ans:2, explain:"P=1/6." },
+    { id:"t7q2", level:"Nhận biết", q:"TB cộng {2,4,6,8}:", opts:["4","5","6","20"], ans:1, explain:"(2+4+6+8)/4=5." },
+    { id:"t7q3", level:"Thông hiểu", q:"Tung xu 3 lần, P(đúng 2 sấp):", opts:["1/8","3/8","1/2","1/4"], ans:1, explain:"C(3,2)·(1/2)³=3/8." },
+    { id:"t7q4", level:"Vận dụng", q:"Hộp 5 đỏ 3 xanh, lấy 2 bi, P(cả 2 đỏ):", opts:["5/14","10/28","25/64","5/8"], ans:0, explain:"C(5,2)/C(8,2)=10/28=5/14." },
+    { id:"t7q5", level:"Vận dụng cao", q:"X: P(0)=0.2, P(1)=0.5, P(2)=0.3. E(X)=?", opts:["0.8","1.0","1.1","1.5"], ans:2, explain:"E=0·0.2+1·0.5+2·0.3=1.1." },
+  ],
+  t8: [
+    { id:"t8q1", level:"Nhận biết", q:"C(5,2)=?", opts:["10","20","25","5"], ans:0, explain:"C(5,2)=10." },
+    { id:"t8q2", level:"Nhận biết", q:"A(4,2)=?", opts:["6","8","12","24"], ans:2, explain:"A(4,2)=4·3=12." },
+    { id:"t8q3", level:"Thông hiểu", q:"Hệ số x² trong (1+x)⁵:", opts:["5","10","20","1"], ans:1, explain:"C(5,2)=10." },
+    { id:"t8q4", level:"Vận dụng", q:"6 người chọn nhóm 3:", opts:["20","120","18","6"], ans:0, explain:"C(6,3)=20." },
+    { id:"t8q5", level:"Vận dụng cao", q:"Hệ số x³ trong (2x-1)⁵:", opts:["-80","80","-40","40"], ans:1, explain:"C(5,3)·(2x)³·(-1)²=10·8x³=80x³." },
+  ],
+  t9: [
+    { id:"t9q1", level:"Nhận biết", q:"sin²x+cos²x=?", opts:["0","1","2","sinx+cosx"], ans:1, explain:"Hằng đẳng thức cơ bản." },
+    { id:"t9q2", level:"Nhận biết", q:"Chu kỳ y=sin(2x):", opts:["π","2π","π/2","4π"], ans:0, explain:"T=2π/2=π." },
+    { id:"t9q3", level:"Thông hiểu", q:"sinx=1/2, nghiệm:", opts:["π/6+k2π","π/6+k2π hoặc 5π/6+k2π","π/3+k2π","π/4+k2π"], ans:1, explain:"x=π/6+k2π hoặc x=5π/6+k2π." },
+    { id:"t9q4", level:"Vận dụng", q:"GTLN y=sinx+cosx:", opts:["1","√2","2","√3"], ans:1, explain:"y=√2·sin(x+π/4). GTLN=√2." },
+    { id:"t9q5", level:"Vận dụng cao", q:"Số nghiệm sinx=x/10 trên ℝ:", opts:["3","5","7","Vô hạn"], ans:2, explain:"Đồ thị y=sinx và y=x/10 cắt nhau tại 7 điểm (kể cả x=0)." },
+  ],
+  t10: [
+    { id:"t10q1", level:"Nhận biết", q:"Tập nghiệm x-3>0:", opts:["(3;+∞)","(-∞;3)","[3;+∞)","(-3;+∞)"], ans:0, explain:"x>3." },
+    { id:"t10q2", level:"Nhận biết", q:"2x+1≤5:", opts:["x≤2","x≥2","x<2","x>2"], ans:0, explain:"x≤2." },
+    { id:"t10q3", level:"Thông hiểu", q:"|x-1|<3:", opts:["(-2;4)","(-4;2)","(1;3)","(-∞;4)"], ans:0, explain:"-2<x<4." },
+    { id:"t10q4", level:"Vận dụng", q:"x²-5x+6≤0:", opts:["[2;3]","(-∞;2]∪[3;+∞)","(2;3)","{2;3}"], ans:0, explain:"(x-2)(x-3)≤0 ⇒ 2≤x≤3." },
+    { id:"t10q5", level:"Vận dụng cao", q:"x²-2mx+m+2>0 ∀x khi:", opts:["-1<m<2","m>2","m<-1 hoặc m>2","-1<m≤2"], ans:0, explain:"Δ'=m²-m-2<0 ⇒ -1<m<2." },
+  ],
+  t11: [
+    { id:"t11q1", level:"Nhận biết", q:"CSC 2,5,8,11 có d=?", opts:["2","3","5","1"], ans:1, explain:"d=5-2=3." },
+    { id:"t11q2", level:"Nhận biết", q:"CSN 3,6,12,24 có q=?", opts:["2","3","6","1/2"], ans:0, explain:"q=6/3=2." },
+    { id:"t11q3", level:"Thông hiểu", q:"u₁₀ CSC: 1,4,7,10,...:", opts:["28","30","31","25"], ans:0, explain:"u₁₀=1+9·3=28." },
+    { id:"t11q4", level:"Vận dụng", q:"S₂₀ CSC: 3,7,11,...:", opts:["820","800","780","840"], ans:0, explain:"S₂₀=10·(6+76)=820." },
+    { id:"t11q5", level:"Vận dụng cao", q:"CSN u₁=1,q=2. S₁₀=?", opts:["1023","1024","2047","512"], ans:0, explain:"S₁₀=(2¹⁰-1)/(2-1)=1023." },
+  ],
+  t12: [
+    { id:"t12q1", level:"Nhận biết", q:"(x³)'=?", opts:["3x","x²","3x²","x³"], ans:2, explain:"(xⁿ)'=nxⁿ⁻¹." },
+    { id:"t12q2", level:"Nhận biết", q:"Cực trị xảy ra khi:", opts:["f'(x₀)=0","f'(x₀)=0 và f' đổi dấu","f(x₀)=0","f''(x₀)=0"], ans:1, explain:"f'(x₀)=0 và f' đổi dấu qua x₀." },
+    { id:"t12q3", level:"Thông hiểu", q:"y=-x²+4x-3 GTLN tại:", opts:["x=2","x=-2","x=4","x=0"], ans:0, explain:"y'=-2x+4=0 ⇒ x=2." },
+    { id:"t12q4", level:"Vận dụng", q:"Tiếp tuyến y=x²-3x+2 tại x=1:", opts:["y=-x+1","y=-x","y=x-1","y=x"], ans:0, explain:"y(1)=0, y'(1)=-1. y=-x+1." },
+    { id:"t12q5", level:"Vận dụng cao", q:"y=x³-3x² có điểm uốn tại:", opts:["x=1","x=0","x=2","x=-1"], ans:0, explain:"y''=6x-6=0 ⇒ x=1. y'''=6≠0 nên x=1 là điểm uốn." },
+  ],
+  // ===== VẬT LÝ (giữ nguyên 5 câu/chương, mở rộng chương trọng điểm) =====
+  l1: [
+    { id:"l1q1", level:"Nhận biết", q:"Biên độ trong x=Acos(ωt+φ) là:", opts:["A","ω","φ","Aω"], ans:0, explain:"A là biên độ." },
+    { id:"l1q2", level:"Nhận biết", q:"T con lắc đơn:", opts:["2π√(l/g)","2π√(g/l)","π√(l/g)","2πl/g"], ans:0, explain:"T=2π√(l/g)." },
+    { id:"l1q3", level:"Thông hiểu", q:"k=100N/m, m=0.25kg. ω=?", opts:["10","20","40","400"], ans:1, explain:"ω=√(k/m)=√400=20 rad/s." },
+    { id:"l1q4", level:"Vận dụng", q:"x=4cos(2πt+π/3)cm. v_max=?", opts:["4π","8π","2π","16π"], ans:1, explain:"v_max=Aω=4·2π=8π cm/s." },
+    { id:"l1q5", level:"Vận dụng", q:"Con lắc lò xo T=0.5s. Tần số f=?", opts:["2Hz","0.5Hz","1Hz","4Hz"], ans:0, explain:"f=1/T=1/0.5=2Hz." },
+    { id:"l1q6", level:"Vận dụng", q:"Dao động x=5cos(4πt)cm. Gia tốc cực đại:", opts:["80π²","20π²","40π²","100π²"], ans:0, explain:"a_max=ω²A=(4π)²·5=80π² cm/s²." },
+    { id:"l1q7", level:"Vận dụng cao", q:"CLLX ngang A=5cm,k=40N/m,m=100g. Khi x=3cm, v=?", opts:["0.8m/s","80cm/s","0.4m/s","1.0m/s"], ans:1, explain:"v=ω√(A²-x²)=20·4·10⁻²=80cm/s." },
+  ],
+  l2: [
+    { id:"l2q1", level:"Nhận biết", q:"Sóng cơ là:", opts:["Dao động lan truyền trong MT vật chất","Sóng trong chân không","Dòng vật chất","Dao động tự do"], ans:0, explain:"Sóng cơ lan truyền trong môi trường vật chất." },
+    { id:"l2q2", level:"Nhận biết", q:"λ=v/f. Đúng hay sai?", opts:["Đúng","Sai","Chỉ đúng với sóng ngang","Chỉ đúng trong chân không"], ans:0, explain:"λ=v/f=vT đúng với mọi sóng." },
+    { id:"l2q3", level:"Thông hiểu", q:"f=1000Hz, v=340m/s. λ=?", opts:["0.34m","34cm","3.4m","0.034m"], ans:0, explain:"λ=340/1000=0.34m." },
+    { id:"l2q4", level:"Vận dụng", q:"2 nguồn cùng pha, d=5λ. Số cực đại:", opts:["9","10","11","5"], ans:2, explain:"N=2·5+1=11." },
+    { id:"l2q5", level:"Vận dụng cao", q:"Sóng dừng dây 2 đầu cố định l=1m,f=100Hz,v=200m/s. Số bụng:", opts:["1","2","3","4"], ans:0, explain:"λ=2m. l=k·λ/2 ⇒ k=1 bụng." },
+  ],
+  l3: [
+    { id:"l3q1", level:"Nhận biết", q:"U hiệu dụng = U₀/√2. Đúng?", opts:["Đúng","Sai","Chỉ với dạng sin","Chỉ với DC"], ans:0, explain:"U=U₀/√2 cho dòng AC hình sin." },
+    { id:"l3q2", level:"Nhận biết", q:"Cộng hưởng RLC khi:", opts:["Z_L=Z_C","R=0","Z_L=R","Z_C=0"], ans:0, explain:"Cộng hưởng: ωL=1/(ωC)." },
+    { id:"l3q3", level:"Thông hiểu", q:"R=30Ω,Z_L=40Ω,Z_C=0. Z=?", opts:["50Ω","70Ω","10Ω","30Ω"], ans:0, explain:"Z=√(900+1600)=50Ω." },
+    { id:"l3q4", level:"Vận dụng", q:"RLC cộng hưởng, U=200V, R=100Ω. P=?", opts:["400W","200W","100W","800W"], ans:0, explain:"P=U²/R=40000/100=400W." },
+    { id:"l3q5", level:"Vận dụng", q:"Mạch R=50Ω, Z_L=50Ω, Z_C=10Ω. Z=?", opts:["√(50²+40²)=√4100","50Ω","90Ω","40Ω"], ans:0, explain:"Z=√(2500+1600)=√4100≈64Ω." },
+    { id:"l3q6", level:"Vận dụng cao", q:"RLC: R=40Ω, U=120V. Khi cộng hưởng I=?", opts:["3A","4A","2A","6A"], ans:0, explain:"Cộng hưởng: Z=R=40Ω. I=U/R=120/40=3A." },
+  ],
+  l4: [
+    { id:"l4q1", level:"Nhận biết", q:"Vận tốc sóng ĐT trong chân không:", opts:["3·10⁸m/s","340m/s","3·10⁵m/s","3·10⁶m/s"], ans:0, explain:"c=3·10⁸m/s." },
+    { id:"l4q2", level:"Nhận biết", q:"E⃗ và B⃗ trong sóng ĐT:", opts:["Vuông góc nhau và vuông góc v⃗","Song song","Cùng phương v⃗","Vuông góc, song song v⃗"], ans:0, explain:"E⃗⊥B⃗⊥v⃗." },
+    { id:"l4q3", level:"Thông hiểu", q:"f=100MHz. λ=?", opts:["3m","30m","0.3m","300m"], ans:0, explain:"λ=3·10⁸/10⁸=3m." },
+    { id:"l4q4", level:"Vận dụng", q:"Mạch LC: L=1mH,C=1μF. f₀≈?", opts:["≈5033Hz","≈1000Hz","≈503Hz","≈15900Hz"], ans:0, explain:"f₀=1/(2π√(LC))≈5033Hz." },
+    { id:"l4q5", level:"Vận dụng cao", q:"LC: t=0 q=Q₀,i=0. Sau T/4:", opts:["q=0,i=I₀","q=Q₀,i=0","q=0,i=-I₀","q=-Q₀"], ans:0, explain:"q=Q₀cos(ωt). t=T/4: q=0, |i|=I₀." },
+  ],
+  l5: [
+    { id:"l5q1", level:"Nhận biết", q:"Tán sắc chứng tỏ:", opts:["Ánh sáng trắng gồm nhiều đơn sắc","AS là sóng ngang","AS có tính hạt","AS truyền thẳng"], ans:0, explain:"Tán sắc → ánh sáng trắng = hỗn hợp đơn sắc." },
+    { id:"l5q2", level:"Nhận biết", q:"Khoảng vân i=?", opts:["λD/a","λa/D","aD/λ","D/(λa)"], ans:0, explain:"i=λD/a." },
+    { id:"l5q3", level:"Thông hiểu", q:"λ=0.6μm,a=0.5mm,D=2m. i=?", opts:["2.4mm","1.2mm","0.6mm","4.8mm"], ans:0, explain:"i=0.6·10⁻⁶·2/(0.5·10⁻³)=2.4mm." },
+    { id:"l5q4", level:"Vận dụng", q:"i=2mm. Tại x=7mm:", opts:["VS bậc 3","VT thứ 4","VS bậc 4","VT thứ 3"], ans:1, explain:"x/i=3.5 → vân tối thứ 4." },
+    { id:"l5q5", level:"Vận dụng cao", q:"λ₁=0.4μm,λ₂=0.6μm. Vân trùng gần nhất:", opts:["Bậc 3 λ₁, bậc 2 λ₂","Bậc 2 λ₁, bậc 3 λ₂","Bậc 6 λ₁, bậc 4 λ₂","Bậc 4 λ₁, bậc 6 λ₂"], ans:0, explain:"k₁/k₂=λ₂/λ₁=3/2. Min: k₁=3,k₂=2." },
+  ],
+  l6: [
+    { id:"l6q1", level:"Nhận biết", q:"E photon = ?", opts:["hf","mc²","hc","hf²"], ans:0, explain:"E=hf=hc/λ." },
+    { id:"l6q2", level:"Nhận biết", q:"Hiện tượng quang điện:", opts:["e bứt khỏi KL khi chiếu AS","Phát sáng khi đốt","Phản xạ AS","Hấp thụ AS"], ans:0, explain:"Quang điện: AS bứt e khỏi KL." },
+    { id:"l6q3", level:"Thông hiểu", q:"λ₀=0.5μm, chiếu λ=0.4μm:", opts:["Xảy ra QĐ","Không","Chỉ cường độ mạnh","Không xác định"], ans:0, explain:"λ<λ₀ → xảy ra." },
+    { id:"l6q4", level:"Vận dụng", q:"A=4eV. λ₀≈?", opts:["0.31μm","0.45μm","0.50μm","0.65μm"], ans:0, explain:"λ₀=hc/A≈0.31μm." },
+    { id:"l6q5", level:"Vận dụng cao", q:"λ=0.2μm, A=3.5eV. Wđ_max≈?", opts:["2.72eV","2.5eV","3.0eV","1.5eV"], ans:0, explain:"E≈6.21eV. Wđ=6.21-3.5≈2.71eV." },
+  ],
+  l7: [
+    { id:"l7q1", level:"Nhận biết", q:"²He⁴ có bao nhiêu p,n?", opts:["2p,2n","4p,2n","2p,4n","4p,4n"], ans:0, explain:"Z=2,N=2." },
+    { id:"l7q2", level:"Nhận biết", q:"PƯ hạt nhân bảo toàn:", opts:["A và Z","Chỉ m","Chỉ E","Số n"], ans:0, explain:"Bảo toàn A và Z." },
+    { id:"l7q3", level:"Thông hiểu", q:"Sau 2T, phần trăm còn:", opts:["50%","25%","12.5%","75%"], ans:1, explain:"N=N₀/4=25%." },
+    { id:"l7q4", level:"Vận dụng", q:"Δm=0.0305u. W_lk/nuclon:", opts:["7.1MeV","28.4MeV","14.2MeV","3.55MeV"], ans:0, explain:"W=0.0305·931.5≈28.4MeV. W/4≈7.1MeV/nuclon." },
+    { id:"l7q5", level:"Vận dụng cao", q:"β⁻: ₉₀Th²³⁴ → ₉₁Pa²³⁴ + ?", opts:["e⁻+ν̄","e⁺+ν","α","γ"], ans:0, explain:"β⁻: n→p+e⁻+ν̄." },
+  ],
+  l8: [
+    { id:"l8q1", level:"Nhận biết", q:"Định luật Coulomb: F=?", opts:["k|q₁q₂|/r²","kq₁q₂r²","q₁q₂/r","kq/r"], ans:0, explain:"F=k|q₁q₂|/r²." },
+    { id:"l8q2", level:"Nhận biết", q:"Đơn vị E:", opts:["V/m","N","C","A"], ans:0, explain:"E đo bằng V/m." },
+    { id:"l8q3", level:"Thông hiểu", q:"q₁=4μC,q₂=-4μC,r=10cm. F=?", opts:["14.4N","1.44N","0.144N","144N"], ans:0, explain:"F=9·10⁹·16·10⁻¹²/0.01=14.4N." },
+    { id:"l8q4", level:"Vận dụng", q:"E=1000V/m, d=5cm. U=?", opts:["50V","5V","500V","0.05V"], ans:0, explain:"U=Ed=50V." },
+    { id:"l8q5", level:"Vận dụng cao", q:"e bay vào E=100V/m. a=?", opts:["1.76·10¹³","1.76·10¹⁰","9.1·10¹³","1.6·10¹³"], ans:0, explain:"a=eE/m≈1.76·10¹³ m/s²." },
+  ],
+  l9: [
+    { id:"l9q1", level:"Nhận biết", q:"Đơn vị I:", opts:["A","V","Ω","C"], ans:0, explain:"Ampe." },
+    { id:"l9q2", level:"Nhận biết", q:"I=U/R. U×2, R giữ → I:", opts:["×2","÷2","Giữ","×4"], ans:0, explain:"I tỉ lệ thuận U." },
+    { id:"l9q3", level:"Thông hiểu", q:"R₁=4Ω//R₂=6Ω. R_tđ:", opts:["2.4Ω","10Ω","24Ω","1.5Ω"], ans:0, explain:"1/R=1/4+1/6=5/12 → R=2.4Ω." },
+    { id:"l9q4", level:"Vận dụng", q:"E=12V,r=1Ω,R=5Ω. I=?", opts:["2A","2.4A","12A","1A"], ans:0, explain:"I=12/6=2A." },
+    { id:"l9q5", level:"Vận dụng cao", q:"R₁=3Ω nt (R₂=6Ω//R₃=6Ω), E=12V,r=0. P₁=?", opts:["12W","27W","48W","3W"], ans:0, explain:"R₂₃=3Ω.R_tđ=6Ω.I=2A.P₁=12W." },
+  ],
+  l10: [
+    { id:"l10q1", level:"Nhận biết", q:"Lực Lorentz vuông góc:", opts:["v⃗ và B⃗","Chỉ B⃗","Chỉ v⃗","Song song (v⃗,B⃗)"], ans:0, explain:"F⃗=qv⃗×B⃗." },
+    { id:"l10q2", level:"Nhận biết", q:"Đơn vị B:", opts:["Tesla","Henry","Weber","Ampe"], ans:0, explain:"Tesla (T)." },
+    { id:"l10q3", level:"Thông hiểu", q:"Suất ĐĐ cảm ứng:", opts:["e=-NΔΦ/Δt","e=NΦ","e=-ΔΦ/Δt","e=NB"], ans:0, explain:"e=-NΔΦ/Δt." },
+    { id:"l10q4", level:"Vận dụng", q:"I=5A, r=10cm. B=?", opts:["10⁻⁵T","10⁻⁶T","10⁻⁴T","2·10⁻⁵T"], ans:0, explain:"B=2·10⁻⁷·5/0.1=10⁻⁵T." },
+    { id:"l10q5", level:"Vận dụng cao", q:"N=100,S=200cm²,ΔB=0.4T,Δt=0.2s. e=?", opts:["4V","2V","0.4V","40V"], ans:0, explain:"e=NΔΦ/Δt=100·0.4·0.02/0.2=4V." },
+  ],
+  // ===== HOÁ HỌC =====
+  h1: [
+    { id:"h1q1", level:"Nhận biết", q:"Este = sản phẩm của:", opts:["Axit + ancol","Axit + bazơ","Ancol + bazơ","Axit + muối"], ans:0, explain:"Este hoá: axit + ancol." },
+    { id:"h1q2", level:"Nhận biết", q:"Chất béo là trieste của:", opts:["Glixerol + axit béo","Glixerol + axit vô cơ","Ancol + axit béo","Phenol + axit béo"], ans:0, explain:"Chất béo = trieste glixerol + axit béo." },
+    { id:"h1q3", level:"Thông hiểu", q:"Xà phòng hoá tạo:", opts:["Glixerol + muối Na axit béo","Glixerol + axit béo","Ancol + muối","Nước + muối"], ans:0, explain:"Chất béo + NaOH → glixerol + xà phòng." },
+    { id:"h1q4", level:"Vận dụng", q:"8.8g CH₃COOC₂H₅ + NaOH. m muối:", opts:["8.2g","6.8g","4.1g","16.4g"], ans:0, explain:"n=0.1mol. m=0.1·82=8.2g." },
+    { id:"h1q5", level:"Vận dụng cao", q:"Đốt cháy 1 este no đơn chức → nCO₂=nH₂O. Este đơn giản nhất:", opts:["HCOOCH₃","CH₃COOCH₃","HCOOC₂H₅","CH₃COOC₂H₅"], ans:0, explain:"Este no đơn CₙH₂ₙO₂, n=2: HCOOCH₃." },
+  ],
+  h2: [
+    { id:"h2q1", level:"Nhận biết", q:"Glucozơ: CTPT?", opts:["C₆H₁₂O₆","C₁₂H₂₂O₁₁","C₆H₁₀O₅","(C₆H₁₀O₅)ₙ"], ans:0, explain:"C₆H₁₂O₆." },
+    { id:"h2q2", level:"Nhận biết", q:"Saccarozơ thuộc:", opts:["Đisaccarit","Monosaccarit","Polisaccarit","Amino axit"], ans:0, explain:"Đisaccarit." },
+    { id:"h2q3", level:"Thông hiểu", q:"Tráng bạc:", opts:["Glucozơ","Saccarozơ","Tinh bột","Xenlulozơ"], ans:0, explain:"Glucozơ có -CHO." },
+    { id:"h2q4", level:"Vận dụng", q:"Lên men 180g glucozơ (H=80%). V_CO₂(đktc):", opts:["35.84L","44.8L","22.4L","17.92L"], ans:0, explain:"nCO₂=2·0.8=1.6mol. V=35.84L." },
+    { id:"h2q5", level:"Vận dụng cao", q:"Thuỷ phân 1kg tinh bột (H=75%) rồi lên men (H=80%). m ancol:", opts:["≈341g","≈568g","≈426g","≈284g"], ans:0, explain:"m=1000·(92/162)·0.75·0.8≈341g." },
+  ],
+  h3: [
+    { id:"h3q1", level:"Nhận biết", q:"Amin = NH₃ thay H bằng:", opts:["Gốc hiđrocacbon","Nhóm -OH","Nhóm -COOH","Halogen"], ans:0, explain:"Amin: thay H trong NH₃ bằng gốc HC." },
+    { id:"h3q2", level:"Nhận biết", q:"Amino axit chứa:", opts:["-NH₂ và -COOH","-OH và -CHO","-NH₂ và -OH","-COOH và -CHO"], ans:0, explain:"Amino axit: -NH₂ + -COOH." },
+    { id:"h3q3", level:"Thông hiểu", q:"Quỳ tím hoá xanh:", opts:["Lysin","Glyxin","Alanin","Axit glutamic"], ans:0, explain:"Lysin: 2 nhóm -NH₂ → bazơ trội." },
+    { id:"h3q4", level:"Vận dụng", q:"7.5g glyxin + HCl. m muối:", opts:["11.15g","14.6g","7.5g","9.55g"], ans:0, explain:"n=0.1. m=0.1·111.5=11.15g." },
+    { id:"h3q5", level:"Vận dụng cao", q:"Đipeptit Gly-Ala + 2NaOH →?", opts:["GlyNa + AlaNa + H₂O","Gly + Ala + 2NaOH","Không phản ứng","GlyAla + Na₂O"], ans:0, explain:"Thuỷ phân peptit trong NaOH tạo muối Na của các amino axit." },
+  ],
+  h4: [
+    { id:"h4q1", level:"Nhận biết", q:"Polime là:", opts:["HC phân tử khối rất lớn, nhiều mắt xích","HC đơn giản","Este lớn","Hỗn hợp"], ans:0, explain:"Polime = nhiều mắt xích lặp lại." },
+    { id:"h4q2", level:"Nhận biết", q:"Nilon-6,6:", opts:["Tơ tổng hợp","Tơ thiên nhiên","Tơ bán tổng hợp","Tơ vô cơ"], ans:0, explain:"Nilon-6,6 = tơ tổng hợp poliamit." },
+    { id:"h4q3", level:"Thông hiểu", q:"Monome PVC:", opts:["CH₂=CHCl","CH₂=CH₂","CH₃-CHCl₂","CH₂=CCl₂"], ans:0, explain:"nCH₂=CHCl → PVC." },
+    { id:"h4q4", level:"Vận dụng", q:"PE n=1000. M≈?", opts:["28000","14000","56000","42000"], ans:0, explain:"M=28·1000=28000." },
+    { id:"h4q5", level:"Vận dụng cao", q:"Tơ tằm thuộc loại:", opts:["Tơ thiên nhiên (protein)","Tơ tổng hợp","Tơ bán tổng hợp","Tơ poliamit tổng hợp"], ans:0, explain:"Tơ tằm: thiên nhiên, bản chất protein." },
+  ],
+  h5: [
+    { id:"h5q1", level:"Nhận biết", q:"Tính chất vật lý chung KL:", opts:["Dẻo, dẫn điện, dẫn nhiệt, ánh kim","Cứng, giòn","Mềm, nhẹ","Trong suốt"], ans:0, explain:"4 tính chất chung." },
+    { id:"h5q2", level:"Nhận biết", q:"Dãy điện hoá sắp xếp:", opts:["Tính khử giảm dần","Tính oxi hoá giảm","KL tăng","T nóng chảy giảm"], ans:0, explain:"K Na Mg Al Zn Fe... tính khử giảm." },
+    { id:"h5q3", level:"Thông hiểu", q:"KL nào khử Cu²⁺:", opts:["Fe","Ag","Cu","Au"], ans:0, explain:"Fe đứng trước Cu." },
+    { id:"h5q4", level:"Vận dụng", q:"5.6g Fe + CuSO₄ dư. m Cu:", opts:["6.4g","3.2g","12.8g","9.6g"], ans:0, explain:"nFe=0.1. mCu=0.1·64=6.4g." },
+    { id:"h5q5", level:"Vận dụng cao", q:"2.7g Al + HCl dư. V H₂:", opts:["3.36L","2.24L","4.48L","1.12L"], ans:0, explain:"nAl=0.1. nH₂=0.15. V=3.36L." },
+  ],
+  h6: [
+    { id:"h6q1", level:"Nhận biết", q:"KL kiềm thuộc nhóm:", opts:["IA","IIA","IIIA","IVA"], ans:0, explain:"IA: Li,Na,K,Rb,Cs." },
+    { id:"h6q2", level:"Nhận biết", q:"Al₂O₃ là oxit:", opts:["Lưỡng tính","Bazơ","Axit","Trung tính"], ans:0, explain:"Al₂O₃ lưỡng tính." },
+    { id:"h6q3", level:"Thông hiểu", q:"NaOH dư + AlCl₃:", opts:["dd NaAlO₂","Kết tủa Al(OH)₃","Al","H₂"], ans:0, explain:"NaOH dư hoà tan Al(OH)₃ → NaAlO₂." },
+    { id:"h6q4", level:"Vận dụng", q:"4.6g Na + H₂O. V H₂:", opts:["2.24L","4.48L","1.12L","3.36L"], ans:0, explain:"nNa=0.2. nH₂=0.1. V=2.24L." },
+    { id:"h6q5", level:"Vận dụng cao", q:"HCl từ từ + 0.1mol NaOH + 0.1mol NaAlO₂. Kết tủa max khi nHCl:", opts:["0.2mol","0.1mol","0.3mol","0.5mol"], ans:0, explain:"HCl td NaOH (0.1) + HCl td NaAlO₂ (0.1) = 0.2mol." },
+  ],
+  h7: [
+    { id:"h7q1", level:"Nhận biết", q:"Fe có SOH:", opts:["+2 và +3","+1 và +2","+2 và +4","+3 và +4"], ans:0, explain:"+2,+3." },
+    { id:"h7q2", level:"Nhận biết", q:"Fe₂O₃ là:", opts:["Oxit bazơ","Oxit axit","Lưỡng tính","Trung tính"], ans:0, explain:"Fe₂O₃ bazơ." },
+    { id:"h7q3", level:"Thông hiểu", q:"Fe + Cl₂ dư:", opts:["FeCl₃","FeCl₂","Fe₂O₃","FeO"], ans:0, explain:"Cl₂ mạnh → Fe³⁺." },
+    { id:"h7q4", level:"Vận dụng", q:"16g Fe₂O₃ + CO dư. m Fe:", opts:["11.2g","5.6g","16.8g","8.4g"], ans:0, explain:"nFe₂O₃=0.1. nFe=0.2. m=11.2g." },
+    { id:"h7q5", level:"Vận dụng cao", q:"Fe + AgNO₃ dư. Muối sắt:", opts:["Fe(NO₃)₃","Fe(NO₃)₂","FeAg","FeSO₄"], ans:0, explain:"AgNO₃ dư oxi hoá Fe²⁺→Fe³⁺." },
+  ],
+  h8: [
+    { id:"h8q1", level:"Nhận biết", q:"Ô nhiễm KK do:", opts:["Khí thải CN+GT","Bụi TN","Hơi nước","N₂"], ans:0, explain:"CO₂,SO₂,NOₓ từ CN+GT." },
+    { id:"h8q2", level:"Nhận biết", q:"Hiệu ứng nhà kính do:", opts:["CO₂","O₂","N₂","H₂"], ans:0, explain:"CO₂ chính." },
+    { id:"h8q3", level:"Thông hiểu", q:"Mưa axit pH:", opts:["<5.6",">7","=7",">5.6"], ans:0, explain:"pH<5.6." },
+    { id:"h8q4", level:"Vận dụng", q:"KHÔNG giảm ô nhiễm nước:", opts:["Xả thải trực tiếp","Xử lý nước thải","Trồng cây","Hạn chế thuốc sâu"], ans:0, explain:"Xả trực tiếp = gây ô nhiễm." },
+    { id:"h8q5", level:"Vận dụng cao", q:"Xử lý nước cứng vĩnh cửu:", opts:["Na₂CO₃","Đun sôi","Ca(OH)₂","HCl"], ans:0, explain:"Na₂CO₃ kết tủa CaCO₃." },
+  ],
+  h9: [
+    { id:"h9q1", level:"Nhận biết", q:"Catot xảy ra:", opts:["Sự khử","Sự oxi hoá","Trung hoà","Không PƯ"], ans:0, explain:"Catot: cation nhận e." },
+    { id:"h9q2", level:"Nhận biết", q:"ĐP dd CuSO₄, catot:", opts:["Cu","O₂","H₂","SO₂"], ans:0, explain:"Cu²⁺+2e→Cu." },
+    { id:"h9q3", level:"Thông hiểu", q:"ĐP dd NaCl có màng ngăn:", opts:["NaOH+Cl₂+H₂","Na+Cl₂","NaCl+H₂O","Na₂O+HCl"], ans:0, explain:"2NaCl+2H₂O→2NaOH+Cl₂+H₂." },
+    { id:"h9q4", level:"Vận dụng", q:"ĐP CuSO₄, I=5A, t=3860s. m Cu:", opts:["6.4g","3.2g","12.8g","1.6g"], ans:0, explain:"m=64·5·3860/(2·96500)=6.4g." },
+    { id:"h9q5", level:"Vận dụng cao", q:"ĐP AgNO₃, anot Ag, I=2A, t=4825s. m Ag:", opts:["10.8g","5.4g","21.6g","16.2g"], ans:0, explain:"m=108·2·4825/(1·96500)=10.8g." },
+  ],
+  h10: [
+    { id:"h10q1", level:"Nhận biết", q:"pH>7:", opts:["NaOH","HCl","NaCl","H₂SO₄"], ans:0, explain:"NaOH bazơ." },
+    { id:"h10q2", level:"Nhận biết", q:"Trung hoà:", opts:["Axit+bazơ","Muối+muối","KL+PK","Oxit+nước"], ans:0, explain:"Axit+Bazơ→Muối+H₂O." },
+    { id:"h10q3", level:"Thông hiểu", q:"BaCl₂+Na₂SO₄:", opts:["Kết tủa BaSO₄","Kết tủa Cu(OH)₂","Khí","Không HT"], ans:0, explain:"BaSO₄↓ trắng." },
+    { id:"h10q4", level:"Vận dụng", q:"200ml HCl 1M + NaOH 2M. V NaOH:", opts:["100ml","200ml","50ml","400ml"], ans:0, explain:"nHCl=0.2. V=0.2/2=0.1L=100ml." },
+    { id:"h10q5", level:"Vận dụng cao", q:"10.2g Al₂O₃ + HCl. m AlCl₃:", opts:["26.7g","13.35g","40.05g","53.4g"], ans:0, explain:"n=0.1. nAlCl₃=0.2. m=26.7g." },
+  ],
+};
+
+// ==================== KẾ HOẠCH 50 NGÀY ====================
+const STUDY_PLAN = [
+  { day:1, subject:"toan", chapter:"Hàm số và đồ thị", goal:"Bảng biến thiên, cực trị, tiệm cận" },
+  { day:2, subject:"ly", chapter:"Dao động cơ", goal:"Chu kỳ, tần số, biên độ, pha" },
+  { day:3, subject:"hoa", chapter:"Este - Lipit", goal:"Este hoá, xà phòng hoá" },
+  { day:4, subject:"toan", chapter:"Ứng dụng đạo hàm", goal:"Cực trị, GTLN-GTNN, tiếp tuyến" },
+  { day:5, subject:"ly", chapter:"Dòng điện xoay chiều", goal:"Tổng trở, cộng hưởng, công suất" },
+  { day:6, subject:"hoa", chapter:"Đại cương kim loại", goal:"Dãy điện hoá, tính chất, điều chế" },
+  { day:7, subject:"toan", chapter:"Mũ - Logarit", goal:"PT mũ, PT logarit, BPT" },
+  { day:8, subject:"ly", chapter:"Sóng cơ - Sóng âm", goal:"Bước sóng, giao thoa, sóng dừng" },
+  { day:9, subject:"hoa", chapter:"KL kiềm - Kiềm thổ - Al", goal:"Tính chất, phản ứng đặc trưng" },
+  { day:10, subject:"toan", chapter:"Nguyên hàm - Tích phân", goal:"Tích phân cơ bản, diện tích" },
+  { day:11, subject:"ly", chapter:"Vật lý hạt nhân", goal:"Cấu tạo, phóng xạ, phản ứng" },
+  { day:12, subject:"hoa", chapter:"Sắt và hợp chất", goal:"Fe²⁺/Fe³⁺, bài toán hỗn hợp" },
+  { day:13, subject:"toan", chapter:"Hình học không gian", goal:"V khối chóp, lăng trụ, tròn xoay" },
+  { day:14, subject:"ly", chapter:"Điện tích - Điện trường", goal:"Coulomb, điện trường đều" },
+  { day:15, subject:"hoa", chapter:"Amin - Amino axit", goal:"Tính chất, phản ứng, đốt cháy" },
+  { day:16, subject:"toan", chapter:"Oxyz", goal:"MP, đường thẳng, mặt cầu, KC" },
+  { day:17, subject:"ly", chapter:"Từ trường - CƯ điện từ", goal:"Lorentz, cảm ứng từ, suất ĐĐ" },
+  { day:18, subject:"hoa", chapter:"Tổng hợp Hoá vô cơ", goal:"Chuỗi PƯ, nhận biết, tổng hợp" },
+  { day:19, subject:"toan", chapter:"Lượng giác", goal:"PT lượng giác, công thức biến đổi" },
+  { day:20, subject:"ly", chapter:"Dòng điện không đổi", goal:"Ohm, mạch điện, công suất" },
+  { day:21, subject:"hoa", chapter:"Điện phân", goal:"Faraday, bài toán ĐP" },
+  { day:22, subject:"toan", chapter:"Xác suất - Thống kê", goal:"XS có ĐK, phân phối nhị thức" },
+  { day:23, subject:"ly", chapter:"Dao động cơ (nâng cao)", goal:"Cắt lò xo, va chạm, năng lượng" },
+  { day:24, subject:"hoa", chapter:"Cacbohidrat", goal:"Lên men, thuỷ phân nâng cao" },
+  { day:25, subject:"toan", chapter:"Số phức", goal:"Phép toán, hình học, tập hợp điểm" },
+  { day:26, subject:"ly", chapter:"Sóng ánh sáng", goal:"Young nâng cao, quang phổ" },
+  { day:27, subject:"hoa", chapter:"Polime", goal:"Phân loại, tổng hợp" },
+  { day:28, subject:"toan", chapter:"Tổ hợp - Nhị thức", goal:"Đếm nâng cao, hệ số khai triển" },
+  { day:29, subject:"ly", chapter:"Lượng tử ánh sáng", goal:"Quang điện nâng cao" },
+  { day:30, subject:"hoa", chapter:"Hoá học & môi trường", goal:"Kiến thức + bài tập thực tế" },
+  { day:31, subject:"toan", chapter:"Bất phương trình", goal:"BPT tham số, BPT mũ-log" },
+  { day:32, subject:"ly", chapter:"Dao động & Sóng ĐT", goal:"Mạch LC nâng cao" },
+  { day:33, subject:"hoa", chapter:"Este-Lipit (nâng cao)", goal:"Hỗn hợp este, chất béo" },
+  { day:34, subject:"toan", chapter:"Cấp số cộng - nhân", goal:"Tổng hợp, ứng dụng" },
+  { day:35, subject:"ly", chapter:"ĐXXC (nâng cao)", goal:"L/C thay đổi, hộp đen" },
+  { day:36, subject:"hoa", chapter:"KL + Sắt (nâng cao)", goal:"Hỗn hợp KL + axit" },
+  { day:37, subject:"toan", chapter:"Hàm số + Đạo hàm", goal:"VDC hàm số chứa tham số" },
+  { day:38, subject:"ly", chapter:"Hạt nhân (nâng cao)", goal:"NL liên kết, nhiệt hạch" },
+  { day:39, subject:"hoa", chapter:"Amin-AA (nâng cao)", goal:"Peptit, thuỷ phân, đốt cháy" },
+  { day:40, subject:"toan", chapter:"Oxyz+HHKG tổng hợp", goal:"VDC KC, góc trong Oxyz" },
+  { day:41, subject:"toan", chapter:"Luyện đề Toán #1", goal:"50 câu, 90 phút" },
+  { day:42, subject:"ly", chapter:"Luyện đề Lý #1", goal:"50 câu, 90 phút" },
+  { day:43, subject:"hoa", chapter:"Luyện đề Hoá #1", goal:"50 câu, 90 phút" },
+  { day:44, subject:"toan", chapter:"Rà soát lỗi sai Toán", goal:"Ôn sổ tay sai lầm" },
+  { day:45, subject:"ly", chapter:"Rà soát lỗi sai Lý", goal:"Ôn sổ tay sai lầm" },
+  { day:46, subject:"hoa", chapter:"Rà soát lỗi sai Hoá", goal:"Ôn sổ tay sai lầm" },
+  { day:47, subject:"toan", chapter:"Luyện đề Toán #2", goal:"Tốc độ + độ chính xác" },
+  { day:48, subject:"ly", chapter:"Luyện đề Lý #2", goal:"Chiến thuật loại trừ" },
+  { day:49, subject:"hoa", chapter:"Luyện đề Hoá #2", goal:"Tự tin vào phòng thi" },
+  { day:50, subject:"toan", chapter:"Tổng ôn + Nghỉ ngơi", goal:"Xem CT nhanh, ngủ sớm" },
+];
+
+// ==================== MẸO THI ====================
+const EXAM_TIPS = {
+  timeManagement: [
+    "90 phút / 50 câu ≈ 1p48s/câu. 40 câu đầu trong 60 phút, 10 câu cuối 30 phút.",
+    "Lướt toàn bộ đề 3-5 phút đầu, đánh dấu câu dễ.",
+    "NB+TH: tối đa 1 phút/câu. Dành thời gian cho VDC.",
+    "Không quá 3 phút/câu. Bí thì đánh dấu, quay lại sau.",
+    "15 phút cuối: rà soát, kiểm tra tô phiếu.",
+  ],
+  eliminationStrategy: [
+    "Gạch chân từ khoá: KHÔNG, SAI, đúng nhất...",
+    "Loại đáp án vô lý về đơn vị, dấu, bậc luỹ thừa.",
+    "2 đáp án gần giống → đáp án đúng thường nằm trong đó.",
+    "Thử thay đáp án vào bài để kiểm tra nhanh.",
+    "Ước lượng: kết quả ≈7.1 → loại 71 và 0.71.",
+  ],
+  cheatSheets: {
+    toan: [
+      "(xⁿ)'=nxⁿ⁻¹, (eˣ)'=eˣ, (lnx)'=1/x, (sinx)'=cosx",
+      "∫xⁿdx=xⁿ⁺¹/(n+1)+C, ∫eˣdx=eˣ+C",
+      "|z|=√(a²+b²), z·z̄=|z|²",
+      "V_chóp=(1/3)Sh, V_trụ=πr²h, V_cầu=(4/3)πR³",
+      "d(M,P)=|ax₀+by₀+cz₀+d|/√(a²+b²+c²)",
+    ],
+    ly: [
+      "x=Acos(ωt+φ), v=-Aωsin(ωt+φ), a=-ω²x",
+      "T_đơn=2π√(l/g), T_lx=2π√(m/k)",
+      "λ=v/f, i=λD/a",
+      "Z=√(R²+(Z_L-Z_C)²), P=UIcosφ",
+      "E=hf=A+Wđ, N=N₀·2^(-t/T)",
+    ],
+    hoa: [
+      "RCOOR'+NaOH→RCOONa+R'OH",
+      "C₆H₁₂O₆→2C₂H₅OH+2CO₂",
+      "H₂NRCOOH+HCl→ClH₃NRCOOH",
+      "m=AIt/(nF), F=96500",
+      "2M+2H₂O→2MOH+H₂ (KL kiềm)",
+    ],
+  },
+  mentalTips: [
+    "Ngủ 7-8 tiếng. Não cần nghỉ ngơi.",
+    "Ăn sáng nhẹ, mang nước + kẹo glucose.",
+    "Đến sớm 30 phút. Hít thở sâu 5 lần.",
+    "Không so sánh với bạn trước giờ thi.",
+    "Câu khó: bỏ qua, quay lại sau.",
+    "Tin vào quá trình. Bạn đã chuẩn bị!",
+  ],
+};
+
+const QUOTES = [
+  "Mỗi ngày 1% — 50 ngày tiến bộ 64%! 🚀",
+  "Kiên trì tạo nên khác biệt.",
+  "Đề thi hỏi bạn chuẩn bị kỹ đến đâu.",
+  "Hôm nay khó, ngày mai dễ hơn — nếu không bỏ cuộc.",
+  "Kết quả = tổng nỗ lực nhỏ mỗi ngày.",
+  "Sai ở bài tập là bài học. Sai ở phòng thi mới đáng tiếc.",
+  "Không cần hoàn hảo — cần đủ tốt và đúng chiến thuật.",
+  "50 ngày đủ thay đổi kết quả. Bắt đầu ngay!",
+  "Học đúng quan trọng hơn học nhiều.",
+  "Mỗi câu sai = một bước tiến.",
+];
+
+// ==================== REDUCER ====================
+const initialState = { chapterStatus:{}, practiceHistory:[], mistakes:[], planCompleted:{}, quizAnswers:{} };
+
+function appReducer(state, action) {
+  switch(action.type) {
+    case 'SET_CHAPTER_STATUS': return{...state,chapterStatus:{...state.chapterStatus,[action.chapterId]:action.status}};
+    case 'ADD_PRACTICE': return{...state,practiceHistory:[...state.practiceHistory,action.practice]};
+    case 'ADD_MISTAKE': if(state.mistakes.find(m=>m.id===action.mistake.id&&m.date===action.mistake.date))return state; return{...state,mistakes:[...state.mistakes,action.mistake]};
+    case 'REMOVE_MISTAKE': return{...state,mistakes:state.mistakes.filter(m=>m.id!==action.id)};
+    case 'TOGGLE_PLAN_DAY': return{...state,planCompleted:{...state.planCompleted,[action.day]:!state.planCompleted[action.day]}};
+    case 'SET_QUIZ_ANSWER': return{...state,quizAnswers:{...state.quizAnswers,[action.questionId]:action.answer}};
+    case 'RESET_QUIZ': const na={...state.quizAnswers}; action.questionIds.forEach(id=>delete na[id]); return{...state,quizAnswers:na};
+    default: return state;
+  }
+}
+
+// ==================== MAIN COMPONENT ====================
+const { useState, useEffect, useMemo, useCallback, useReducer } = React;
+function Archimedes() {
+  const [state, dispatch] = useReducer(appReducer, initialState);
+  const [activeTab, setActiveTab] = useState('home');
+  const [selectedSubject, setSelectedSubject] = useState(null);
+  const [selectedChapter, setSelectedChapter] = useState(null);
+  const [countdown, setCountdown] = useState({days:0,hours:0,minutes:0,seconds:0});
+  const [moreTab, setMoreTab] = useState('mistakes');
+  const [quizSubmitted, setQuizSubmitted] = useState(false);
+  const [mistakeFilter, setMistakeFilter] = useState('all');
+  const [tipsSection, setTipsSection] = useState('time');
+  const [fadeKey, setFadeKey] = useState(0);
+  const [examLibFilter, setExamLibFilter] = useState('toan');
+  const [examTypeFilter, setExamTypeFilter] = useState('all');
+  const [examChecked, setExamChecked] = useState({});
+
+  const examDate = useMemo(() => { const d=new Date(); d.setDate(d.getDate()+50); d.setHours(8,0,0,0); return d; }, []);
+
+  useEffect(() => {
+    const tick=()=>{const now=new Date();const diff=examDate-now;if(diff<=0){setCountdown({days:0,hours:0,minutes:0,seconds:0});return;}setCountdown({days:Math.floor(diff/86400000),hours:Math.floor((diff%86400000)/3600000),minutes:Math.floor((diff%3600000)/60000),seconds:Math.floor((diff%60000)/1000)});};
+    tick(); const id=setInterval(tick,1000); return()=>clearInterval(id);
+  }, [examDate]);
+
+  const [quote] = useState(()=>QUOTES[Math.floor(Math.random()*QUOTES.length)]);
+  const handleTabChange=useCallback((tab)=>{setActiveTab(tab);setSelectedSubject(null);setSelectedChapter(null);setQuizSubmitted(false);setFadeKey(k=>k+1);},[]);
+  const getProgress=useCallback((sk)=>{const ch=SUBJECTS[sk].chapters;const m=ch.filter(c=>state.chapterStatus[c.id]==='mastered').length;return Math.round((m/ch.length)*100);},[state.chapterStatus]);
+  const totalProgress=useMemo(()=>{const all=Object.values(SUBJECTS).flatMap(s=>s.chapters);const m=all.filter(c=>state.chapterStatus[c.id]==='mastered').length;return Math.round((m/all.length)*100);},[state.chapterStatus]);
+  const todaySuggestions=useMemo(()=>STUDY_PLAN.slice(0,3),[]);
+  const getColor=(c,v='500')=>({['blue-400']:'#60a5fa',['blue-500']:'#3b82f6',['blue-600']:'#2563eb',['violet-400']:'#a78bfa',['violet-500']:'#8b5cf6',['violet-600']:'#7c3aed',['emerald-400']:'#34d399',['emerald-500']:'#10b981',['emerald-600']:'#059669'}[`${c}-${v}`]||'#3b82f6');
+  const statusLabels={not_started:'Chưa học',in_progress:'Đang ôn',mastered:'Đã nắm'};
+  const statusColors={not_started:'bg-slate-700',in_progress:'bg-amber-600',mastered:'bg-emerald-600'};
+  const priorityColors={Cao:'text-red-400',TB:'text-amber-400',Thấp:'text-slate-400'};
+
+  // ==================== RENDER: DASHBOARD ====================
+  const renderDashboard=()=>(<div className="space-y-5 pb-4">
+    <div className="bg-gradient-to-r from-blue-900/60 to-violet-900/60 rounded-2xl p-4 border border-blue-800/30"><p className="text-sm text-blue-200 italic leading-relaxed">"{quote}"</p></div>
+    <div className="bg-slate-800/80 rounded-2xl p-5 text-center border border-slate-700/50">
+      <p className="text-xs text-slate-400 uppercase tracking-widest mb-3">⏳ Đếm ngược ngày thi</p>
+      <div className="flex justify-center gap-3">{[{val:countdown.days,l:'Ngày'},{val:countdown.hours,l:'Giờ'},{val:countdown.minutes,l:'Phút'},{val:countdown.seconds,l:'Giây'}].map((it,i)=>(
+        <div key={i} className="bg-slate-900 rounded-xl px-3 py-2 min-w-[60px]"><div className="text-2xl font-bold text-white tabular-nums">{String(it.val).padStart(2,'0')}</div><div className="text-[10px] text-slate-500 mt-0.5">{it.l}</div></div>
+      ))}</div>
+    </div>
+    <div className="bg-slate-800/80 rounded-2xl p-4 border border-slate-700/50"><div className="flex justify-between items-center mb-2"><span className="text-sm text-slate-300">Tiến độ tổng</span><span className="text-sm font-bold text-blue-400">{totalProgress}%</span></div><div className="w-full bg-slate-700 rounded-full h-2.5"><div className="bg-gradient-to-r from-blue-500 to-violet-500 h-2.5 rounded-full transition-all duration-700" style={{width:`${totalProgress}%`}}/></div></div>
+    <div className="space-y-3">{Object.entries(SUBJECTS).map(([key,subj])=>{const p=getProgress(key);const mc=subj.chapters.filter(c=>state.chapterStatus[c.id]==='mastered').length;return(
+      <div key={key} className="bg-slate-800/80 rounded-2xl p-4 border border-slate-700/50">
+        <div className="flex items-center justify-between mb-3"><div className="flex items-center gap-2"><span className="text-xl">{subj.emoji}</span><div><h3 className="font-semibold text-white">{subj.name}</h3><p className="text-xs text-slate-400">Mục tiêu: {subj.target}</p></div></div><span className="text-xs text-slate-400">{mc}/{subj.chapters.length}</span></div>
+        <div className="w-full bg-slate-700 rounded-full h-2 mb-3"><div className="h-2 rounded-full transition-all duration-700" style={{width:`${p}%`,backgroundColor:getColor(subj.color)}}/></div>
+        <button onClick={()=>{setActiveTab('knowledge');setSelectedSubject(key);setFadeKey(k=>k+1);}} className="w-full py-2 rounded-xl text-sm font-medium text-white" style={{backgroundColor:getColor(subj.color,'600')}}>Bắt đầu ôn {subj.name}</button>
+      </div>);})}</div>
+    <div className="bg-slate-800/80 rounded-2xl p-4 border border-slate-700/50"><h3 className="text-sm font-semibold text-white mb-3">📋 Lịch ôn hôm nay</h3><div className="space-y-2">{todaySuggestions.map((it,i)=>(<div key={i} className="flex items-center gap-3 bg-slate-900/60 rounded-xl p-3"><span className="text-lg">{SUBJECTS[it.subject].emoji}</span><div className="flex-1 min-w-0"><p className="text-sm text-white truncate">{it.chapter}</p><p className="text-xs text-slate-400 truncate">{it.goal}</p></div><span className="text-[10px] text-slate-500">Ngày {it.day}</span></div>))}</div></div>
+  </div>);
+
+  // ==================== RENDER: KNOWLEDGE MAP ====================
+  const renderKnowledge=()=>{
+    if(selectedChapter) return renderQuiz();
+    return(<div className="space-y-4 pb-4">
+      <div className="flex gap-2">{Object.entries(SUBJECTS).map(([k,s])=>(<button key={k} onClick={()=>setSelectedSubject(k)} className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all ${selectedSubject===k?'text-white shadow-lg':'bg-slate-800 text-slate-400'}`} style={selectedSubject===k?{backgroundColor:getColor(s.color)}:{}}>{s.emoji} {s.name}</button>))}</div>
+      {selectedSubject&&<div className="space-y-2">{SUBJECTS[selectedSubject].chapters.map(ch=>{const st=state.chapterStatus[ch.id]||'not_started';const nx=st==='not_started'?'in_progress':st==='in_progress'?'mastered':'not_started';return(
+        <div key={ch.id} className="bg-slate-800/80 rounded-xl p-3.5 border border-slate-700/50"><div className="flex items-center justify-between"><div className="flex-1 min-w-0 mr-3"><div className="flex items-center gap-2 mb-1"><h4 className="text-sm font-medium text-white truncate">{ch.name}</h4><span className={`text-[10px] ${priorityColors[ch.priority]}`}>●{ch.priority}</span></div><div className="flex items-center gap-2">
+          <button onClick={()=>dispatch({type:'SET_CHAPTER_STATUS',chapterId:ch.id,status:nx})} className={`text-[10px] px-2.5 py-1 rounded-full ${statusColors[st]} text-white`}>{statusLabels[st]}</button>
+          {QUESTION_BANK[ch.id]&&<button onClick={()=>{setSelectedChapter(ch.id);setQuizSubmitted(false);}} className="text-[10px] px-2.5 py-1 rounded-full bg-blue-600/30 text-blue-300">Luyện đề →</button>}
+        </div></div></div></div>);})}</div>}
+      {!selectedSubject&&<div className="text-center py-12 text-slate-500"><p className="text-4xl mb-3">📚</p><p className="text-sm">Chọn môn để xem chương</p></div>}
+    </div>);
+  };
+
+  // ==================== RENDER: QUIZ ====================
+  const renderQuiz=()=>{
+    const questions=QUESTION_BANK[selectedChapter]||[];
+    const sk=Object.entries(SUBJECTS).find(([_,s])=>s.chapters.find(c=>c.id===selectedChapter))?.[0];
+    const ch=SUBJECTS[sk]?.chapters.find(c=>c.id===selectedChapter);
+    const ac=questions.filter(q=>state.quizAnswers[q.id]!==undefined).length;
+    const cc=questions.filter(q=>state.quizAnswers[q.id]===q.ans).length;
+    const handleSubmit=()=>{setQuizSubmitted(true);dispatch({type:'ADD_PRACTICE',practice:{date:new Date().toLocaleDateString('vi-VN'),subject:sk,chapterId:selectedChapter,chapterName:ch?.name,correct:cc,total:questions.length,percentage:Math.round((cc/questions.length)*100)}});questions.forEach(q=>{const sel=state.quizAnswers[q.id];if(sel!==undefined&&sel!==q.ans)dispatch({type:'ADD_MISTAKE',mistake:{id:q.id,question:q.q,options:q.opts,selectedAns:sel,correctAns:q.ans,explain:q.explain,date:new Date().toLocaleDateString('vi-VN'),chapterId:selectedChapter,subject:sk,level:q.level}});});};
+    const handleReset=()=>{dispatch({type:'RESET_QUIZ',questionIds:questions.map(q=>q.id)});setQuizSubmitted(false);};
+    const lvlC={'Nhận biết':'bg-green-900/40 text-green-400','Thông hiểu':'bg-blue-900/40 text-blue-400','Vận dụng':'bg-amber-900/40 text-amber-400','Vận dụng cao':'bg-red-900/40 text-red-400'};
+    return(<div className="space-y-4 pb-4">
+      <div className="flex items-center gap-3"><button onClick={()=>setSelectedChapter(null)} className="text-slate-400 text-lg">←</button><div><h2 className="text-white font-semibold">{ch?.name}</h2><p className="text-xs text-slate-400">{questions.length} câu • {SUBJECTS[sk]?.name}</p></div></div>
+      {quizSubmitted&&<div className="bg-slate-800 rounded-2xl p-4 border border-slate-700/50 text-center"><div className="text-3xl font-bold text-white mb-1">{cc}/{questions.length}</div><p className="text-sm text-slate-400">Đúng: {Math.round((cc/questions.length)*100)}%</p><button onClick={handleReset} className="mt-3 px-4 py-2 bg-blue-600 text-white text-sm rounded-xl">Làm lại</button></div>}
+      {questions.map((q,qi)=>{const sel=state.quizAnswers[q.id];const isA=sel!==undefined;const show=quizSubmitted||isA;const ok=sel===q.ans;return(
+        <div key={q.id} className="bg-slate-800/80 rounded-2xl p-4 border border-slate-700/50">
+          <div className="flex items-center gap-2 mb-2"><span className="text-xs font-bold text-slate-500">Câu {qi+1}</span><span className={`text-[10px] px-2 py-0.5 rounded-full ${lvlC[q.level]}`}>{q.level}</span></div>
+          <p className="text-sm text-white mb-3 leading-relaxed">{q.q}</p>
+          <div className="space-y-2">{q.opts.map((o,oi)=>{const lt=['A','B','C','D'][oi];let cls='bg-slate-700/60 text-slate-300 border-slate-600';if(isA){if(oi===q.ans&&show)cls='bg-emerald-900/50 text-emerald-300 border-emerald-600';else if(oi===sel&&!ok&&show)cls='bg-red-900/50 text-red-300 border-red-600';else if(oi===sel)cls='bg-blue-900/50 text-blue-300 border-blue-600';}return(<button key={oi} onClick={()=>{if(!quizSubmitted)dispatch({type:'SET_QUIZ_ANSWER',questionId:q.id,answer:oi});}} className={`w-full text-left px-3 py-2.5 rounded-xl text-sm border transition-all ${cls}`} disabled={quizSubmitted}><span className="font-medium mr-2">{lt}.</span>{o}</button>);})}</div>
+          {show&&isA&&<div className={`mt-3 p-3 rounded-xl text-xs leading-relaxed ${ok?'bg-emerald-950/40 text-emerald-300':'bg-red-950/40 text-red-300'}`}><p className="font-semibold mb-1">{ok?'✅ Đúng!':'❌ Sai!'} Đáp án: {['A','B','C','D'][q.ans]}</p><p className="text-slate-300">{q.explain}</p></div>}
+        </div>);})}
+      {!quizSubmitted&&ac>0&&<button onClick={handleSubmit} className="w-full py-3 bg-blue-600 text-white font-medium rounded-xl text-sm">Nộp bài ({ac}/{questions.length})</button>}
+    </div>);
+  };
+
+  // ==================== RENDER: PRACTICE ====================
+  const renderPractice=()=>{
+    if(selectedChapter) return renderQuiz();
+    return(<div className="space-y-4 pb-4">
+      <h2 className="text-lg font-bold text-white">🎯 Luyện đề trắc nghiệm</h2>
+      {state.practiceHistory.length>0&&<div className="bg-slate-800/80 rounded-2xl p-4 border border-slate-700/50"><h3 className="text-sm font-semibold text-white mb-3">Lịch sử</h3><div className="space-y-2 max-h-40 overflow-y-auto">{[...state.practiceHistory].reverse().slice(0,5).map((p,i)=>(<div key={i} className="flex items-center justify-between bg-slate-900/60 rounded-lg px-3 py-2"><div className="flex items-center gap-2"><span className="text-xs">{SUBJECTS[p.subject]?.emoji}</span><span className="text-xs text-slate-300 truncate max-w-[140px]">{p.chapterName}</span></div><div className="flex items-center gap-2"><span className={`text-xs font-bold ${p.percentage>=80?'text-emerald-400':p.percentage>=60?'text-amber-400':'text-red-400'}`}>{p.percentage}%</span><span className="text-[10px] text-slate-500">{p.date}</span></div></div>))}</div></div>}
+      {Object.entries(SUBJECTS).map(([k,s])=>(<div key={k} className="bg-slate-800/80 rounded-2xl p-4 border border-slate-700/50"><h3 className="text-sm font-semibold text-white mb-3">{s.emoji} {s.name}</h3><div className="space-y-1.5">{s.chapters.filter(c=>QUESTION_BANK[c.id]).map(ch=>(<button key={ch.id} onClick={()=>{setSelectedChapter(ch.id);setQuizSubmitted(false);}} className="w-full flex items-center justify-between bg-slate-900/60 rounded-lg px-3 py-2.5 text-left"><span className="text-sm text-slate-300">{ch.name}</span><span className="text-xs text-slate-500">{QUESTION_BANK[ch.id].length} câu →</span></button>))}</div></div>))}
+    </div>);
+  };
+
+  // ==================== RENDER: PLANNER ====================
+  const renderPlanner=()=>{
+    const phases=[{name:'GĐ 1: Nền tảng',range:[1,20],color:'blue'},{name:'GĐ 2: Nâng cao',range:[21,40],color:'violet'},{name:'GĐ 3: Luyện đề',range:[41,50],color:'emerald'}];
+    return(<div className="space-y-4 pb-4">
+      <h2 className="text-lg font-bold text-white">📅 Kế hoạch 50 ngày</h2>
+      <div className="flex gap-2">{phases.map((p,i)=>{const d=STUDY_PLAN.filter(s=>s.day>=p.range[0]&&s.day<=p.range[1]&&state.planCompleted[s.day]).length;const t=p.range[1]-p.range[0]+1;return(<div key={i} className="flex-1 bg-slate-800 rounded-xl p-2.5 text-center border border-slate-700/50"><div className="text-[10px] text-slate-400 mb-1">GĐ {i+1}</div><div className="text-sm font-bold text-white">{d}/{t}</div></div>);})}</div>
+      {phases.map((phase,pi)=>(<div key={pi}><div className="flex items-center gap-2 mb-2 mt-4"><div className="w-2 h-2 rounded-full" style={{backgroundColor:getColor(phase.color)}}/><h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{phase.name}</h3></div><div className="space-y-1.5">{STUDY_PLAN.filter(s=>s.day>=phase.range[0]&&s.day<=phase.range[1]).map(item=>{const isT=item.day===1;const isD=state.planCompleted[item.day];return(<div key={item.day} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 border transition-all ${isT?'border-blue-500 bg-blue-950/30':'border-slate-700/50 bg-slate-800/60'}`}><button onClick={()=>dispatch({type:'TOGGLE_PLAN_DAY',day:item.day})} className={`w-5 h-5 rounded-md flex items-center justify-center text-xs flex-shrink-0 ${isD?'bg-emerald-600 text-white':'bg-slate-700 text-slate-500'}`}>{isD?'✓':''}</button><div className="flex-1 min-w-0"><div className="flex items-center gap-2"><span className="text-xs font-bold text-slate-500">D{item.day}</span><span className="text-sm">{SUBJECTS[item.subject]?.emoji}</span><span className="text-sm text-white truncate">{item.chapter}</span></div><p className="text-xs text-slate-500 truncate">{item.goal}</p></div>{isT&&<span className="text-[9px] px-1.5 py-0.5 bg-blue-600 text-white rounded-full flex-shrink-0">Hôm nay</span>}</div>);})}</div></div>))}
+    </div>);
+  };
+
+  // ==================== RENDER: EXAM LIBRARY (MỚI) ====================
+  const renderExamLibrary=()=>{
+    const exams=EXAM_LIBRARY[examLibFilter]||[];
+    const filtered=examTypeFilter==='all'?exams:exams.filter(e=>e.type===examTypeFilter);
+    const thCount=exams.filter(e=>e.source.includes('Thanh')||e.id.startsWith('TH-')).length;
+    const checkedCount=Object.keys(examChecked).filter(k=>examChecked[k]&&exams.find(e=>e.id===k)).length;
+
+    return(<div className="space-y-4 pb-4">
+      <h2 className="text-lg font-bold text-white">📄 Thư viện đề thi thực chiến</h2>
+      <div className="bg-gradient-to-r from-amber-900/40 to-orange-900/40 rounded-xl p-3 border border-amber-800/30">
+        <p className="text-xs text-amber-200 leading-relaxed">⚠️ Đề thi được tổng hợp từ Sở GD&ĐT Thanh Hoá, các trường THPT Thanh Hoá, Bộ GD&ĐT và các Sở uy tín. Nhấn vào đề để mở link tải/xem đề + đáp án gốc.</p>
+      </div>
+
+      {/* Subject tabs */}
+      <div className="flex gap-2">{Object.entries(SUBJECTS).map(([k,s])=>(<button key={k} onClick={()=>setExamLibFilter(k)} className={`flex-1 py-2 rounded-xl text-sm font-medium ${examLibFilter===k?'text-white':'bg-slate-800 text-slate-400'}`} style={examLibFilter===k?{backgroundColor:getColor(s.color)}:{}}>{s.emoji} {s.name}</button>))}</div>
+
+      {/* Stats */}
+      <div className="flex gap-2">
+        <div className="flex-1 bg-slate-800 rounded-xl p-2.5 text-center border border-slate-700/50"><div className="text-lg font-bold text-white">{exams.length}</div><div className="text-[10px] text-slate-400">Tổng đề</div></div>
+        <div className="flex-1 bg-slate-800 rounded-xl p-2.5 text-center border border-slate-700/50"><div className="text-lg font-bold text-amber-400">{thCount}</div><div className="text-[10px] text-slate-400">Thanh Hoá</div></div>
+        <div className="flex-1 bg-slate-800 rounded-xl p-2.5 text-center border border-slate-700/50"><div className="text-lg font-bold text-emerald-400">{checkedCount}</div><div className="text-[10px] text-slate-400">Đã làm</div></div>
+      </div>
+
+      {/* Type filter */}
+      <div className="flex gap-1.5 overflow-x-auto pb-1">{[{k:'all',l:'Tất cả'},{k:'Trường',l:'🏫 Trường TH'},{k:'Sở',l:'🏛 Sở GD'},{k:'Bộ',l:'⭐ Bộ GD'},{k:'Tổng hợp',l:'📦 Tổng hợp'}].map(f=>(<button key={f.k} onClick={()=>setExamTypeFilter(f.k)} className={`px-2.5 py-1.5 rounded-lg text-xs whitespace-nowrap ${examTypeFilter===f.k?'bg-blue-600 text-white':'bg-slate-800 text-slate-400'}`}>{f.l}</button>))}</div>
+
+      {/* Exam list */}
+      <div className="space-y-2">{filtered.map(ex=>{
+        const isTH=ex.source.includes('Thanh')||ex.id.startsWith('TH-');
+        const done=examChecked[ex.id];
+        return(<div key={ex.id} className={`bg-slate-800/80 rounded-xl p-3 border ${isTH?'border-amber-800/40':'border-slate-700/50'}`}>
+          <div className="flex items-start gap-3">
+            <button onClick={()=>setExamChecked(p=>({...p,[ex.id]:!p[ex.id]}))} className={`w-5 h-5 rounded-md flex items-center justify-center text-xs flex-shrink-0 mt-0.5 ${done?'bg-emerald-600 text-white':'bg-slate-700 text-slate-500'}`}>{done?'✓':''}</button>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5 mb-1">
+                {isTH&&<span className="text-[9px] px-1.5 py-0.5 bg-amber-900/50 text-amber-300 rounded-full">Thanh Hoá</span>}
+                <span className="text-[9px] px-1.5 py-0.5 bg-slate-700 text-slate-300 rounded-full">{ex.type}</span>
+                <span className="text-[9px] text-slate-500">{ex.year}</span>
+              </div>
+              <a href={ex.url} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-300 hover:text-blue-200 leading-snug block">{ex.name} ↗</a>
+              <p className="text-[11px] text-slate-500 mt-1">{ex.note}</p>
+            </div>
+          </div>
+        </div>);})}</div>
+
+      {/* Aggregate sources */}
+      <div className="bg-slate-800/80 rounded-2xl p-4 border border-slate-700/50 mt-4">
+        <h3 className="text-sm font-semibold text-white mb-3">🔗 Nguồn đề thi tổng hợp</h3>
+        <div className="space-y-2">{EXAM_AGGREGATE_SOURCES.map((s,i)=>(<a key={i} href={s.url} target="_blank" rel="noopener noreferrer" className="block bg-slate-900/60 rounded-lg p-2.5"><p className="text-sm text-blue-300 font-medium">{s.name} ↗</p><p className="text-[11px] text-slate-500">{s.desc}</p></a>))}</div>
+      </div>
+    </div>);
+  };
+
+  // ==================== RENDER: MISTAKES ====================
+  const renderMistakes=()=>{
+    const f=mistakeFilter==='all'?state.mistakes:state.mistakes.filter(m=>m.subject===mistakeFilter);
+    return(<div className="space-y-4 pb-4">
+      <h2 className="text-lg font-bold text-white">📝 Sổ tay sai lầm</h2>
+      <div className="flex gap-2 flex-wrap">{[{key:'all',label:'Tất cả'},...Object.entries(SUBJECTS).map(([k,s])=>({key:k,label:s.emoji+' '+s.name}))].map(fi=>(<button key={fi.key} onClick={()=>setMistakeFilter(fi.key)} className={`px-3 py-1.5 rounded-lg text-xs ${mistakeFilter===fi.key?'bg-blue-600 text-white':'bg-slate-800 text-slate-400'}`}>{fi.label}</button>))}</div>
+      {f.length===0?<div className="text-center py-12 text-slate-500"><p className="text-4xl mb-2">🎉</p><p className="text-sm">Chưa có lỗi sai. Bắt đầu luyện đề!</p></div>:
+      <div className="space-y-3">{[...f].reverse().map((m,i)=>(<div key={`${m.id}-${i}`} className="bg-slate-800/80 rounded-2xl p-4 border border-slate-700/50">
+        <div className="flex items-center gap-2 mb-2"><span className="text-xs">{SUBJECTS[m.subject]?.emoji}</span><span className="text-[10px] text-slate-500">{m.date}</span><span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-900/40 text-amber-400">{m.level}</span></div>
+        <p className="text-sm text-white mb-2">{m.question}</p>
+        <div className="text-xs space-y-1 mb-2"><p className="text-red-400">Đã chọn: {['A','B','C','D'][m.selectedAns]}. {m.options[m.selectedAns]}</p><p className="text-emerald-400">Đáp án: {['A','B','C','D'][m.correctAns]}. {m.options[m.correctAns]}</p></div>
+        <div className="bg-slate-900/60 rounded-lg p-2.5 text-xs text-slate-300">{m.explain}</div>
+        <button onClick={()=>{dispatch({type:'REMOVE_MISTAKE',id:m.id});if(QUESTION_BANK[m.chapterId]){setActiveTab('practice');setSelectedChapter(m.chapterId);setQuizSubmitted(false);}}} className="mt-2 text-xs text-blue-400 underline">Làm lại →</button>
+      </div>))}</div>}
+    </div>);
+  };
+
+  // ==================== RENDER: TIPS ====================
+  const renderTips=()=>(<div className="space-y-4 pb-4">
+    <h2 className="text-lg font-bold text-white">💡 Mẹo thi</h2>
+    <div className="flex gap-2 overflow-x-auto pb-1">{[{k:'time',l:'⏱ Thời gian'},{k:'eliminate',l:'🎯 Loại trừ'},{k:'cheat',l:'📋 Công thức'},{k:'mental',l:'🧠 Tâm lý'}].map(t=>(<button key={t.k} onClick={()=>setTipsSection(t.k)} className={`px-3 py-1.5 rounded-lg text-xs whitespace-nowrap ${tipsSection===t.k?'bg-blue-600 text-white':'bg-slate-800 text-slate-400'}`}>{t.l}</button>))}</div>
+    {tipsSection==='time'&&<div className="space-y-2">{EXAM_TIPS.timeManagement.map((t,i)=>(<div key={i} className="bg-slate-800/80 rounded-xl p-3 border border-slate-700/50"><p className="text-sm text-slate-300">{t}</p></div>))}</div>}
+    {tipsSection==='eliminate'&&<div className="space-y-2">{EXAM_TIPS.eliminationStrategy.map((t,i)=>(<div key={i} className="bg-slate-800/80 rounded-xl p-3 border border-slate-700/50"><p className="text-sm text-slate-300">{t}</p></div>))}</div>}
+    {tipsSection==='cheat'&&<div className="space-y-4">{Object.entries(EXAM_TIPS.cheatSheets).map(([k,fs])=>(<div key={k} className="bg-slate-800/80 rounded-2xl p-4 border border-slate-700/50"><h3 className="text-sm font-semibold text-white mb-3">{SUBJECTS[k].emoji} {SUBJECTS[k].name}</h3><div className="space-y-2">{fs.map((f,i)=>(<div key={i} className="bg-slate-900/60 rounded-lg p-2.5"><p className="text-xs text-slate-300 font-mono">{f}</p></div>))}</div></div>))}</div>}
+    {tipsSection==='mental'&&<div className="space-y-2">{EXAM_TIPS.mentalTips.map((t,i)=>(<div key={i} className="bg-slate-800/80 rounded-xl p-3 border border-slate-700/50"><p className="text-sm text-slate-300">{t}</p></div>))}</div>}
+  </div>);
+
+  // ==================== RENDER: MORE ====================
+  const renderMore=()=>(<div className="space-y-4 pb-4">
+    <div className="flex gap-1.5">{[{k:'mistakes',l:'📝 Sai lầm'},{k:'tips',l:'💡 Mẹo thi'},{k:'exams',l:'📄 Đề thi'}].map(t=>(<button key={t.k} onClick={()=>setMoreTab(t.k)} className={`flex-1 py-2.5 rounded-xl text-sm font-medium ${moreTab===t.k?'bg-blue-600 text-white':'bg-slate-800 text-slate-400'}`}>{t.l}</button>))}</div>
+    {moreTab==='mistakes'&&renderMistakes()}
+    {moreTab==='tips'&&renderTips()}
+    {moreTab==='exams'&&renderExamLibrary()}
+  </div>);
+
+  // ==================== MAIN RENDER ====================
+  const tabs=[{id:'home',label:'Trang chủ',icon:'🏠'},{id:'knowledge',label:'Kiến thức',icon:'📚'},{id:'practice',label:'Luyện đề',icon:'🎯'},{id:'planner',label:'Kế hoạch',icon:'📅'},{id:'more',label:'Thêm',icon:'⋯'}];
+  const renderContent=()=>{switch(activeTab){case 'home':return renderDashboard();case 'knowledge':return renderKnowledge();case 'practice':return renderPractice();case 'planner':return renderPlanner();case 'more':return renderMore();default:return renderDashboard();}};
+
+  return(<div className="min-h-screen bg-slate-950 text-white font-sans">
+    <div className="sticky top-0 z-30 bg-slate-950/95 backdrop-blur-md border-b border-slate-800/50 px-4 py-3"><div className="max-w-lg mx-auto flex items-center justify-between"><div className="flex items-center gap-2"><span className="text-xl">🏛️</span><h1 className="text-lg font-bold bg-gradient-to-r from-blue-400 to-violet-400 bg-clip-text text-transparent">Archimedes</h1></div><div className="flex items-center gap-1.5 bg-slate-800/60 px-2.5 py-1 rounded-full"><span className="text-[10px] text-slate-400">🎯</span><span className="text-xs font-bold text-blue-400">{totalProgress}%</span></div></div></div>
+    <div className="max-w-lg mx-auto px-4 pt-4 pb-24" key={fadeKey} style={{animation:'fadeIn 0.25s ease-out'}}>{renderContent()}</div>
+    <div className="fixed bottom-0 left-0 right-0 z-30 bg-slate-900/95 backdrop-blur-md border-t border-slate-800/50"><div className="max-w-lg mx-auto flex">{tabs.map(tab=>(<button key={tab.id} onClick={()=>handleTabChange(tab.id)} className={`flex-1 flex flex-col items-center py-2.5 transition-colors ${activeTab===tab.id?'text-blue-400':'text-slate-500'}`}><span className="text-lg mb-0.5">{tab.icon}</span><span className="text-[10px]">{tab.label}</span></button>))}</div></div>
+    <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}`}</style>
+  </div>);
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(React.createElement(Archimedes));
+</script>
+</body>
+</html>
